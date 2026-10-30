@@ -411,24 +411,18 @@ h4 { font-size: 17px; font-weight: 700; }
 
 /* ---------- соцсети ---------- */
 
-.socials { display: flex; align-items: center; gap: 16px; margin-top: 28px; }
+.socials { display: flex; align-items: center; gap: 22px; margin-top: 28px; }
 .socials__link {
-  display: block;
-  width: 72px;
-  height: 72px;
-  border-radius: 16px;
-  overflow: hidden;
-  color: var(--text);
-}
-.socials__link svg { display: block; width: 72px; height: 72px; }
-.socials__link--tile {
   display: grid;
   place-items: center;
-  background: #000;
-  border-radius: 16px;
+  color: var(--text);
+  height: 48px;
 }
-.socials__link--tile svg { width: 44px; height: 44px; }
-.socials__link:hover { opacity: .75; }
+.socials__link svg { display: block; }
+.socials__link--tg svg { width: 42px; height: 35px; }
+.socials__link--vk svg { width: 48px; height: 29px; }
+.socials__link--max svg { width: 45px; height: 45px; }
+.socials__link:hover { opacity: .7; }
 
 /* ---------- подвал ---------- */
 
