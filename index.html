@@ -6,18 +6,17 @@
   <title>Суровая премия — профессиональная премия в сфере интернет-маркетинга и SMM</title>
   <meta name="description" content="Суровая премия — профессиональная премия в сфере интернет-маркетинга и SMM от команды Сурового Питерского форума. Приём заявок: 24 октября 2026 — 17 марта 2027." />
   <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#080607" />
   <link rel="icon" href="/favicon.png" />
-  <link rel="stylesheet" href="css/style.css?v=7" />
+  <link rel="stylesheet" href="css/tokens.css?v=5" />
+  <link rel="stylesheet" href="css/style.css?v=15" />
 </head>
 <body>
 
-<div class="proto-bar">Прототип · структура и тексты по ТЗ · дизайн — следующим этапом</div>
-
 <header class="header">
   <div class="wrap header__inner">
-    <a class="logo" href="index.html">
-      <span class="logo__mark">СП</span>
-      <span>Суровая премия</span>
+    <a class="logo" href="index.html" aria-label="Суровая премия — на главную">
+      <img class="logo__img" src="logo.svg" alt="Суровая премия" width="230" height="45" />
     </a>
 
     <nav class="nav" id="nav">
@@ -45,7 +44,10 @@
   <section class="hero" id="top">
     <div class="wrap hero__grid">
       <div>
-        <h1>Суровая<br />премия</h1>
+        <h1 class="hero__brand">
+          <img class="hero__logo" src="logo.svg" alt="" width="230" height="45" />
+          <span class="sr-only">Суровая премия</span>
+        </h1>
         <p class="hero__sub">Получи свой Оскар в маркетинге</p>
         <div class="hero__text">
           <p class="lead">Профессиональная премия в сфере интернет-маркетинга и SMM от команды Сурового Питерского форума.</p>
@@ -447,11 +449,11 @@
 
       <div class="timeline">
         <div class="timeline__item">
-          <div class="timeline__date">24 октября 2026 — 17 марта 2027</div>
+          <div class="timeline__date">24 октября 2026 —<br />17 марта 2027</div>
           <div class="timeline__text">Приём заявок</div>
         </div>
         <div class="timeline__item">
-          <div class="timeline__date">18 марта 2027 — 14 апреля 2027</div>
+          <div class="timeline__date">18 марта 2027 —<br />14 апреля 2027</div>
           <div class="timeline__text">Формирование шорт-листа</div>
         </div>
         <div class="timeline__item">
@@ -719,16 +721,15 @@
   <div class="wrap">
     <div class="footer__top">
       <div>
-        <a class="logo" href="index.html">
-          <span class="logo__mark">СП</span>
-          <span>Суровая премия</span>
+        <a class="logo" href="index.html" aria-label="Суровая премия — на главную">
+          <img class="logo__img" src="logo.svg" alt="Суровая премия" width="230" height="45" />
         </a>
         <p class="footer__tagline">Профессиональная премия в сфере digital-маркетинга.</p>
         <p style="margin-top:24px"><a class="btn btn--sm" href="https://salebot.site/st/bw6e/conf_surov_forum_prem" target="_blank" rel="noopener">Подать заявку</a></p>
       </div>
 
       <div class="footer__col">
-        <h4>Разделы</h4>
+        <h3>Разделы</h3>
         <ul>
           <li><a href="#about">О премии</a></li>
           <li><a href="#nominations">Номинации</a></li>
@@ -740,7 +741,7 @@
       </div>
 
       <div class="footer__col">
-        <h4>Документы</h4>
+        <h3>Документы</h3>
         <ul>
           <li><a href="https://marketingawards.ru/condition.html" target="_blank" rel="noopener">Регламент премии</a></li>
           <li><a href="https://marketingawards.ru/condition.html" target="_blank" rel="noopener">Правила участия и подачи кейсов</a></li>
@@ -758,6 +759,7 @@
   </div>
 </footer>
 
-<script src="js/app.js"></script>
+<script src="js/star-border.js?v=1"></script>
+<script src="js/app.js?v=3"></script>
 </body>
 </html>
