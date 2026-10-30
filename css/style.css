@@ -381,20 +381,55 @@ body.menu-open { overflow: hidden; }
 .grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
 .card {
+  --card-border: var(--rule-strong);
+  --card-surface: var(--ground);
+  --card-border-hover: #C8C2BC80;
+  --card-surface-hover: #0C090A;
+  --card-cut-x: 72px;
+  --card-cut-y: 60px;
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 28px;
-  border: 1px solid var(--rule-strong);
+  border: 0;
   border-radius: var(--radius);
   background: transparent;
-  transition: border-color .2s var(--ease), background .2s var(--ease);
+}
+
+.card::before,
+.card::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-radius: var(--radius);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--card-cut-x)) 0,
+    100% var(--card-cut-y),
+    100% 100%,
+    0 100%
+  );
+  transition: background .2s var(--ease);
+}
+
+.card::before {
+  inset: 0;
+  z-index: -2;
+  background: var(--card-border);
+}
+
+.card::after {
+  inset: 2px;
+  z-index: -1;
+  background: var(--card-surface);
 }
 
 @media (hover: hover) {
   .card:hover {
-    border-color: #C8C2BC80;
-    background: var(--control-surface);
+    --card-border: var(--card-border-hover);
+    --card-surface: var(--card-surface-hover);
   }
 }
 
@@ -998,14 +1033,11 @@ body.menu-open { overflow: hidden; }
   filter: none;
 }
 
-.section--soft .card:hover {
-  border-color: #25292E66;
-  background: #FBF9F4;
-}
-
 .section--soft .card {
-  background: var(--paper-raised);
-  border-color: var(--paper-rule-strong);
+  --card-border: var(--paper-rule-strong);
+  --card-surface: var(--paper-raised);
+  --card-border-hover: #25292E66;
+  --card-surface-hover: #FBF9F4;
 }
 
 .section--soft .ph {
@@ -1115,7 +1147,7 @@ body.menu-open { overflow: hidden; }
   .section-head { margin-bottom: 32px; }
 
   .grid--3, .grid--4, .grid--2 { grid-template-columns: 1fr; }
-  .card { padding: 24px; }
+  .card { padding: 24px; --card-cut-x: 56px; --card-cut-y: 46px; }
 
   .nom-group__summary { gap: 12px; padding: 20px; }
   .nom-group__title h3 { font-size: 19px; }
