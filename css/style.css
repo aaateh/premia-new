@@ -936,8 +936,6 @@ body.menu-open .header {
 .founder__photo--logo {
   display: grid;
   place-items: center;
-  padding: 22px;
-  background: var(--paper);
 }
 
 .founder__photo--logo img { object-fit: contain; }
