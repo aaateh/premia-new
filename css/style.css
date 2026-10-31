@@ -10,7 +10,7 @@ h1, h2, h3, h4, p, ul, ol, figure, blockquote { margin: 0; }
 
 h1 {
   font-family: var(--slogan-font);
-  font-size: clamp(40px, 6vw, 60.48px);
+  font-size: var(--fs-h1);
   font-weight: var(--slogan-weight);
   line-height: 1.06;
   letter-spacing: var(--slogan-tracking);
@@ -20,7 +20,7 @@ h1 {
 
 h2 {
   font-family: var(--slogan-font);
-  font-size: clamp(28px, 3.6vw, 40px);
+  font-size: var(--fs-h2);
   font-weight: 400;
   line-height: 1.14;
   letter-spacing: -.01em;
@@ -38,7 +38,7 @@ h3 {
 
 h4 {
   font-family: var(--font-ui);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 400;
   line-height: 1.35;
 }
@@ -62,7 +62,7 @@ a:hover { text-decoration: none; }
 
 .lead {
   font-family: var(--invitation-font);
-  font-size: clamp(18px, 1.7vw, 20px);
+  font-size: var(--fs-lead);
   line-height: 1.5;
   letter-spacing: 0;
   color: var(--scene-dim);
@@ -95,7 +95,7 @@ a:hover { text-decoration: none; }
   background: transparent;
   color: var(--scene-ink);
   font-family: var(--font-ui);
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.2;
   text-align: center;
   white-space: nowrap;
@@ -194,7 +194,8 @@ a:hover { text-decoration: none; }
   padding: 6px 0;
   color: var(--scene-ink);
   font-family: var(--font-base);
-  font-size: 13px;
+  font-size: 14px;
+  white-space: nowrap;
   font-weight: 500;
   letter-spacing: .08em;
   line-height: 1.2;
@@ -222,6 +223,15 @@ a:hover { text-decoration: none; }
 .header__cta { flex: none; }
 
 body.menu-open { overflow: hidden; }
+
+/* при открытом меню body становится скролл-контейнером и ломает sticky —
+   фиксируем шапку, чтобы логотип и кнопка закрытия оставались на месте */
+body.menu-open .header {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+}
 
 .burger {
   display: none;
@@ -281,14 +291,14 @@ body.menu-open { overflow: hidden; }
   margin-bottom: 28px;
   color: var(--scene-ink);
   font-family: var(--invitation-font);
-  font-size: clamp(20px, 2.1vw, 26px);
+  font-size: var(--fs-prose);
   font-weight: 400;
   line-height: 1.35;
 }
 
 .hero__text { max-width: 560px; }
 .hero__text p { color: var(--scene-ink); }
-.hero__text .muted { font-size: 17px; }
+.hero__text .muted { font-size: 16px; }
 .hero__text p + p { margin-top: 14px; }
 
 .hero__cta {
@@ -324,7 +334,7 @@ body.menu-open { overflow: hidden; }
 .dates-line__value {
   color: var(--scene-ink);
   font-family: var(--font-ui);
-  font-size: clamp(17px, 1.5vw, 19px);
+  font-size: var(--fs-lead);
   line-height: 1.35;
 }
 
@@ -347,9 +357,11 @@ body.menu-open { overflow: hidden; }
   margin-bottom: clamp(32px, 4vw, 52px);
 }
 
+.section-head h1 + .lead,
 .section-head h2 + .lead,
 .section-head h2 + .muted { margin-top: 18px; }
 .section-head .lead + .muted { margin-top: 10px; }
+.section-head .lead + .lead { margin-top: 10px; }
 
 .eyebrow {
   display: flex;
@@ -433,6 +445,25 @@ body.menu-open { overflow: hidden; }
   }
 }
 
+.card__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.card__icon {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  color: var(--scene-ink);
+}
+
+.card__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
 .card__num {
   color: var(--accent-text);
   font-family: var(--font-base);
@@ -450,22 +481,15 @@ body.menu-open { overflow: hidden; }
 
 .mission { max-width: 900px; }
 
-.mission blockquote {
-  max-width: 900px;
-  color: var(--scene-ink);
-  font-family: var(--invitation-font);
-  font-size: clamp(22px, 2.7vw, 33px);
-  line-height: 1.38;
+/* один крупный текст вместо «подзаголовок + мелкий текст» */
+.prose { max-width: 900px; }
+
+.prose p {
+  font-size: clamp(20px, 2vw, var(--fs-prose));
+  line-height: 1.45;
 }
 
-.mission blockquote + p { margin-top: 24px; }
-
-.mission p {
-  max-width: 720px;
-  color: var(--scene-muted);
-}
-
-.mission p + p { margin-top: 14px; }
+.prose p + p { margin-top: 18px; }
 
 /* ---------- номинации ---------- */
 
@@ -485,6 +509,8 @@ body.menu-open { overflow: hidden; }
   padding: 24px 28px;
   list-style: none;
   cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
   transition: background .2s var(--ease);
 }
 
@@ -499,6 +525,7 @@ body.menu-open { overflow: hidden; }
   margin-top: 1px;
   border: 1px solid var(--rule-strong);
   border-radius: 50%;
+  transition: border-color .2s var(--ease);
 }
 
 .nom-group__toggle::before,
@@ -507,13 +534,14 @@ body.menu-open { overflow: hidden; }
   position: absolute;
   top: 50%;
   left: 50%;
-  background: var(--brand-accent);
+  background: var(--accent-text);
   transform: translate(-50%, -50%);
+  transition: opacity .2s var(--ease), transform .2s var(--ease);
 }
 
 .nom-group__toggle::before { width: 11px; height: 2px; }
 .nom-group__toggle::after { width: 2px; height: 11px; }
-.nom-group[open] .nom-group__toggle::after { display: none; }
+.nom-group[open] .nom-group__toggle::after { opacity: 0; transform: translate(-50%, -50%) scaleY(0); }
 
 .nom-group__title {
   display: flex;
@@ -521,12 +549,12 @@ body.menu-open { overflow: hidden; }
   gap: 6px;
 }
 
-.nom-group__title h3 { font-size: 21px; }
+.nom-group__title h3 { font-size: 20px; }
 
 .nom-group__title span {
   max-width: 760px;
   color: var(--scene-muted);
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.55;
 }
 
@@ -579,7 +607,7 @@ body.menu-open { overflow: hidden; }
   display: block;
   margin-top: 2px;
   color: var(--scene-muted);
-  font-size: 13.5px;
+  font-size: 14px;
   line-height: 1.45;
 }
 
@@ -600,8 +628,8 @@ body.menu-open { overflow: hidden; }
 .section--soft .cta-strip { background: transparent; }
 
 .cta-strip__text { max-width: 620px; }
-.cta-strip__text h3 { font-size: 22px; line-height: 1.3; }
-.cta-strip__text p { margin-top: 8px; font-size: 15.5px; }
+.cta-strip__text h3 { font-size: 20px; line-height: 1.3; }
+.cta-strip__text p { margin-top: 8px; font-size: 16px; }
 
 .note-strong {
   max-width: 780px;
@@ -610,20 +638,20 @@ body.menu-open { overflow: hidden; }
   border-left: 2px solid var(--brand-accent);
   color: var(--scene-dim);
   font-family: var(--font-ui);
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.5;
 }
 
 /* ---------- стоимость ---------- */
 
 .price-card { gap: 10px; padding: 32px; }
-.price-card h3 { font-size: 18px; }
+.price-card h3 { font-size: 20px; }
 
 .price {
   margin-top: 10px;
   color: var(--scene-ink);
   font-family: var(--slogan-font);
-  font-size: clamp(30px, 3vw, 38px);
+  font-size: var(--fs-h2);
   font-weight: 400;
   line-height: 1.05;
   letter-spacing: -.01em;
@@ -641,7 +669,7 @@ body.menu-open { overflow: hidden; }
   text-transform: uppercase;
 }
 
-.price-card p { font-size: 15.5px; }
+.price-card p { font-size: 16px; }
 .price-card .btn { align-self: flex-start; margin-top: auto; }
 
 /* ---------- шаги ---------- */
@@ -669,39 +697,89 @@ body.menu-open { overflow: hidden; }
   counter-increment: step;
   color: var(--brand-accent);
   font-family: var(--slogan-font);
-  font-size: 26px;
+  font-size: 24px;
   line-height: 1.1;
 }
 
-.steps h3 { font-size: 21px; }
+.steps h3 { font-size: 20px; }
 .steps p { max-width: 720px; margin-top: 8px; font-size: 16px; }
 
 /* ---------- даты ---------- */
 
+.timeline-panel {
+  --panel-border: var(--rule-strong);
+  --panel-surface: var(--ground);
+  --panel-cut-x: 72px;
+  --panel-cut-y: 60px;
+  position: relative;
+  isolation: isolate;
+  padding: 38px 40px;
+  border-radius: var(--radius);
+  background: transparent;
+}
+
+.timeline-panel::before,
+.timeline-panel::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-radius: var(--radius);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--panel-cut-x)) 0,
+    100% var(--panel-cut-y),
+    100% 100%,
+    0 100%
+  );
+}
+
+.timeline-panel::before {
+  inset: 0;
+  z-index: -2;
+  background: var(--panel-border);
+}
+
+.timeline-panel::after {
+  inset: 2px;
+  z-index: -1;
+  background: var(--panel-surface);
+}
+
 .timeline {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-top: 1px solid var(--rule-strong);
+  gap: 36px 32px;
+  counter-reset: stage;
 }
 
 .timeline__item {
-  padding: 24px 24px 8px 0;
-  border-right: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  counter-increment: stage;
 }
 
-.timeline__item:last-child { border-right: 0; padding-right: 0; }
+.timeline__item::before {
+  content: counter(stage, decimal-leading-zero);
+  color: var(--accent-text);
+  font-family: var(--slogan-font);
+  font-size: var(--fs-h2);
+  line-height: 1;
+  letter-spacing: -.02em;
+}
 
 .timeline__date {
-  margin-bottom: 8px;
   color: var(--scene-ink);
   font-family: var(--font-ui);
-  font-size: 17px;
-  line-height: 1.4;
+  font-size: 20px;
+  line-height: 1.35;
 }
 
 .timeline__text {
+  max-width: 220px;
   color: var(--scene-muted);
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.5;
 }
 
@@ -734,7 +812,7 @@ body.menu-open { overflow: hidden; }
 
 .jury-card__name {
   font-family: var(--font-ui);
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1.3;
 }
 
@@ -756,7 +834,7 @@ body.menu-open { overflow: hidden; }
   max-width: 720px;
   margin-top: 28px;
   color: var(--scene-muted);
-  font-size: 15px;
+  font-size: 16px;
 }
 
 /* ---------- партнёры ---------- */
@@ -780,30 +858,67 @@ body.menu-open { overflow: hidden; }
 }
 
 .partners__text { max-width: 640px; }
-.partners__text h3 { margin-bottom: 14px; font-size: 22px; }
-.partners__text p { font-size: 15.5px; }
+.partners__text h3 { margin-bottom: 14px; font-size: 20px; }
+.partners__text p { font-size: 16px; }
 .partners__text p + p { margin-top: 12px; }
 
-/* ---------- организатор ---------- */
+/* ---------- страница жюри ---------- */
 
-.organizer {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: center;
-  gap: clamp(36px, 5vw, 64px);
+.section--jury h1 { font-size: clamp(30px, 8.4vw, 60.48px); }
+
+/* ---------- организаторы ---------- */
+
+.founders {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -20px;
 }
 
-.organizer h2 { margin-bottom: 24px; }
-.organizer p + p { margin-top: 16px; }
-.organizer .btn { margin-top: 28px; }
-
-.organizer__media {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+.founder {
+  width: calc(50% - 40px);
+  margin: 20px;
 }
 
-.organizer__media .ph:first-child { grid-column: 1 / -1; }
+.founder__photo {
+  float: left;
+  width: 236px;
+  margin: 0 25px 10px 0;
+}
+
+.founder__photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: var(--radius);
+}
+
+.founder__photo--logo {
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: var(--paper);
+}
+
+.founder__photo--logo img { object-fit: contain; }
+
+.founder__name {
+  color: var(--accent-text);
+  font-family: var(--font-ui);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: .01em;
+  text-transform: uppercase;
+}
+
+.founder__text {
+  margin-top: 14px;
+  color: var(--scene-muted);
+}
+
+.founders__more { margin-top: 40px; }
 
 /* ---------- FAQ ---------- */
 
@@ -816,8 +931,10 @@ body.menu-open { overflow: hidden; }
   padding: 22px 48px 22px 0;
   list-style: none;
   cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
   font-family: var(--font-ui);
-  font-size: 18.5px;
+  font-size: 20px;
   line-height: 1.4;
   transition: color .2s var(--ease);
 }
@@ -836,9 +953,13 @@ body.menu-open { overflow: hidden; }
   font-weight: 500;
   line-height: 1;
   transform: translateY(-50%);
+  transition: transform .25s var(--ease), color .2s var(--ease);
 }
 
-.faq details[open] summary::after { content: "−"; }
+.faq details[open] summary::after {
+  content: "+";
+  transform: translateY(-50%) rotate(45deg);
+}
 
 .faq details p {
   max-width: 880px;
@@ -895,7 +1016,7 @@ body.menu-open { overflow: hidden; }
 .contacts__list .contact-value {
   color: var(--scene-ink);
   font-family: var(--font-ui);
-  font-size: clamp(20px, 2vw, 24px);
+  font-size: var(--fs-prose);
   line-height: 1.3;
   text-transform: none;
   letter-spacing: 0;
@@ -978,7 +1099,7 @@ body.menu-open { overflow: hidden; }
 
 .footer__col a {
   color: var(--scene-dim);
-  font-size: 14.5px;
+  font-size: 14px;
   line-height: 1.5;
   transition: color .2s var(--ease);
 }
@@ -999,7 +1120,7 @@ body.menu-open { overflow: hidden; }
   padding-top: 20px;
   border-top: 1px solid var(--rule);
   color: var(--scene-faint);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 /* ==========================================================================
@@ -1014,8 +1135,6 @@ body.menu-open { overflow: hidden; }
   --scene-muted: var(--muted);
   --scene-dim: var(--ink-soft);
   --scene-faint: var(--muted);
-  --accent-text: var(--accent-paper);
-  --brand-accent: var(--accent-paper);
   --control-surface: #25292E14;
   background: var(--paper);
   color: var(--ink);
@@ -1060,9 +1179,10 @@ body.menu-open { overflow: hidden; }
   .nav__list { gap: 16px; }
   .nav__list a { font-size: 12px; letter-spacing: .06em; }
   .timeline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .timeline__item { padding-bottom: 24px; border-bottom: 1px solid var(--rule); }
-  .timeline__item:nth-child(2n) { border-right: 0; padding-right: 0; }
-  .timeline__item:nth-last-child(-n+2) { border-bottom: 0; }
+  .timeline-panel { padding: 32px; }
+
+  .founders { margin: 0 -10px; }
+  .founder { width: calc(100% - 20px); margin: 10px 10px 34px; }
 }
 
 @media (max-width: 980px) {
@@ -1094,7 +1214,7 @@ body.menu-open { overflow: hidden; }
   .nav.is-open { display: flex; }
   .nav__list { flex-direction: column; align-items: stretch; gap: 0; }
   .nav__list li { border-bottom: 1px solid var(--rule); }
-  .nav__list a { display: block; padding: 15px 0; font-size: 13px; letter-spacing: .1em; }
+  .nav__list a { display: block; padding: 15px 0; font-size: 14px; letter-spacing: .1em; }
   .nav__list a::after { display: none; }
   .nav .btn { display: inline-flex; margin-top: 20px; }
 }
@@ -1120,7 +1240,7 @@ body.menu-open { overflow: hidden; }
 
   .nom-list { grid-template-columns: 1fr; }
 
-  .organizer, .contacts { grid-template-columns: 1fr; }
+  .contacts { grid-template-columns: 1fr; }
 
   .partners { flex-direction: column; align-items: flex-start; padding: 28px; }
   .partners .btn { width: 100%; }
@@ -1150,7 +1270,7 @@ body.menu-open { overflow: hidden; }
   .card { padding: 24px; --card-cut-x: 56px; --card-cut-y: 46px; }
 
   .nom-group__summary { gap: 12px; padding: 20px; }
-  .nom-group__title h3 { font-size: 19px; }
+  .nom-group__title h3 { font-size: 20px; }
   .nom-group__count { display: none; }
   .nom-group__body { padding: 20px; }
   .nom-group__toggle { width: 24px; height: 24px; }
@@ -1159,23 +1279,26 @@ body.menu-open { overflow: hidden; }
   .price-card .btn { width: 100%; }
 
   .steps li { grid-template-columns: 44px minmax(0, 1fr); gap: 14px; padding: 22px 0; }
-  .steps li::before { font-size: 21px; }
+  .steps li::before { font-size: 20px; }
 
-  .timeline { grid-template-columns: 1fr; }
-  .timeline__item { padding: 18px 0; border-right: 0; border-bottom: 1px solid var(--rule); }
-  .timeline__item:nth-last-child(-n+2) { border-bottom: 1px solid var(--rule); }
-  .timeline__item:last-child { border-bottom: 0; }
+  .timeline { grid-template-columns: 1fr; gap: 26px; }
+  .timeline-panel { padding: 24px; --panel-cut-x: 56px; --panel-cut-y: 46px; }
+  .timeline__item { gap: 8px; }
+  .timeline__date { font-size: 16px; }
+  .timeline__text { max-width: none; font-size: 16px; }
 
   .partners { padding: 24px; }
   .partners__logos .ph { width: calc(50% - 6px); height: 62px; }
 
-  .organizer__media { gap: 10px; }
 
-  .faq summary { padding: 18px 40px 18px 0; font-size: 16.5px; }
+  .founder__photo { float: none; width: 150px; margin: 0 0 14px; }
+  .founder__name { font-size: 20px; }
+
+  .faq summary { padding: 18px 40px 18px 0; font-size: 16px; }
   .faq summary::after { font-size: 20px; }
 
   .contacts .btn { width: 100%; }
-  .contacts__list a, .contacts__list .contact-value { font-size: 19px; }
+  .contacts__list a, .contacts__list .contact-value { font-size: 20px; }
 
   .footer__top { grid-template-columns: 1fr; gap: 32px; }
   .footer__bottom { font-size: 12px; }

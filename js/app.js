@@ -22,6 +22,78 @@
     for (var i = 0; i < groups.length; i++) groups[i].removeAttribute('open');
   }
 
+  // плавное раскрытие спойлеров без библиотек
+  function enhanceDetails() {
+    var items = document.querySelectorAll('details');
+    for (var d = 0; d < items.length; d++) {
+      (function (details) {
+        var summary = details.querySelector('summary');
+        if (!summary || details.dataset.motionReady) return;
+        details.dataset.motionReady = '1';
+
+        summary.addEventListener('click', function (event) {
+          if (event.target.closest('a')) return;
+          event.preventDefault();
+          if (details.dataset.animating === '1') return;
+          if (!details.animate) {
+            details.open = !details.open;
+            return;
+          }
+
+          var reduced = window.matchMedia &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          if (reduced) {
+            details.open = !details.open;
+            return;
+          }
+
+          details.dataset.animating = '1';
+          var start = details.offsetHeight;
+          details.style.overflow = 'hidden';
+
+          function finish() {
+            details.style.height = '';
+            details.style.overflow = '';
+            delete details.dataset.animating;
+          }
+
+          if (!details.open) {
+            details.open = true;
+            details.style.height = 'auto';
+            var end = details.offsetHeight;
+            details.style.height = start + 'px';
+            var anim = details.animate([
+              { height: start + 'px', opacity: .65 },
+              { height: end + 'px', opacity: 1 }
+            ], {
+              duration: 280,
+              easing: 'cubic-bezier(.22, 1, .36, 1)'
+            });
+            anim.onfinish = finish;
+            anim.oncancel = finish;
+          } else {
+            var border = details.offsetHeight - details.clientHeight;
+            var end = summary.offsetHeight + border;
+            var anim = details.animate([
+              { height: start + 'px', opacity: 1 },
+              { height: end + 'px', opacity: .65 }
+            ], {
+              duration: 240,
+              easing: 'cubic-bezier(.22, 1, .36, 1)'
+            });
+            anim.onfinish = function () {
+              details.open = false;
+              finish();
+            };
+            anim.oncancel = finish;
+          }
+        });
+      })(items[d]);
+    }
+  }
+
+  enhanceDetails();
+
   var burger = document.getElementById('burger');
   var nav = document.getElementById('nav');
   if (!burger || !nav) return;

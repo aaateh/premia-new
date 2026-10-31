@@ -46,12 +46,12 @@
   /* --- тёмная сцена (по умолчанию) --- */
   --ground: #080607;
   --scene-ink: #F5F0EB;
-  --scene-muted: #C8C2BC;
+  --scene-muted: #F5F0EB;
   --scene-dim: #F5F0EB;
   --control-surface: #15111280;
   --action-border: #C8C2BC;
   --brand-accent: #F56624;
-  --accent-text: #FF7B39;
+  --accent-text: #F56624;
   --fire-glow: #FF7B39;
 
   /* --- светлые поверхности (панели, служебные экраны) --- */
@@ -68,11 +68,21 @@
   --disabled-ink: #7E8077;
   --disabled-line: #AAA99F;
   --error: #A62C18;
-  --accent-paper: #8A2412;
+  --accent-paper: #FF3838;
   --close-hover: #DEDBD3;
   --backdrop: #0A090BB3;
   --scroll-thumb: #4A4442;
   --scroll-track: #080607;
+
+  /* --- типографика: шкала --- */
+  --fs-micro: 12px;                 /* подписи, номера, метки */
+  --fs-small: 14px;                 /* мелкий текст, примечания */
+  --fs-body: 16px;                  /* основной текст */
+  --fs-lead: 20px;                  /* лид, подзаголовки, названия */
+  --fs-prose: 24px;                 /* крупный вводный текст */
+  --fs-h3: 20px;
+  --fs-h2: clamp(28px, 3.6vw, 40px);
+  --fs-h1: clamp(40px, 6vw, 60.48px);
 
   /* --- сетка --- */
   --edge: clamp(24px, 4vw, 72px);
@@ -103,7 +113,8 @@
   --rule-strong: #C8C2BC52;   /* рамка карточек и блоков */
   --paper-rule: #D2CEC7;      /* волосяная линия на бумаге */
   --paper-rule-strong: #B4B0A9; /* рамка карточек на бумаге */
-  --scene-faint: #A49E98;     /* третьестепенный текст */
+  --scene-faint: #F5F0EB;     /* третьестепенный текст — белый */
+  --selection: #FFB38A;       /* персиковый тинт оранжевого логотипа */
 
   /* --- анимация --- */
   --ease: cubic-bezier(.22, 1, .36, 1);
@@ -143,8 +154,13 @@ a { color: inherit; }
 button, input, select, textarea { font: inherit; color: inherit; }
 
 ::selection {
-  background: var(--brand-accent);
-  color: var(--ground);
+  background: var(--selection);
+  color: #1A0F0A;
+}
+
+::-moz-selection {
+  background: var(--selection);
+  color: #1A0F0A;
 }
 
 :focus-visible {
