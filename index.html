@@ -9,7 +9,7 @@
   <meta name="theme-color" content="#080607" />
   <link rel="icon" href="/favicon.png" />
   <link rel="stylesheet" href="css/tokens.css?v=9" />
-  <link rel="stylesheet" href="css/style.css?v=39" />
+  <link rel="stylesheet" href="css/style.css?v=44" />
 </head>
 <body>
 
@@ -133,19 +133,28 @@
 
       <div class="grid grid--3">
         <article class="card participant-card">
-          <span class="card__aurora" aria-hidden="true"></span>
+          <span class="card__aurora" aria-hidden="true">
+            <span class="card__silver"></span>
+            <span class="card__holo"></span>
+          </span>
           <span class="card__num">01</span>
           <h3>Специалисты и фрилансеры</h3>
           <p class="muted">Работаете на себя или в найме и самостоятельно ведёте направление? В блоке «Люди в маркетинге» можно представить собственную работу и профессиональные достижения.</p>
         </article>
         <article class="card participant-card">
-          <span class="card__aurora" aria-hidden="true"></span>
+          <span class="card__aurora" aria-hidden="true">
+            <span class="card__silver"></span>
+            <span class="card__holo"></span>
+          </span>
           <span class="card__num">02</span>
           <h3>Агентства и группы специалистов</h3>
           <p class="muted">Создаёте проекты для заказчиков? Представьте кейс, который показывает, какие задачи вы решаете, как работаете и какого результата добиваетесь. Оцениваем конкретные проекты и кампании.</p>
         </article>
         <article class="card participant-card">
-          <span class="card__aurora" aria-hidden="true"></span>
+          <span class="card__aurora" aria-hidden="true">
+            <span class="card__silver"></span>
+            <span class="card__holo"></span>
+          </span>
           <span class="card__num">03</span>
           <h3>Бренды и инхаус-команды</h3>
           <p class="muted">Развиваете маркетинг своего бизнеса? Покажите кампанию, контентный или SMM-проект, в котором решения вашей команды помогли достичь поставленных целей.</p>
@@ -775,6 +784,17 @@
     </div>
   </div>
 </footer>
+
+<svg class="svg-filters" aria-hidden="true" focusable="false">
+  <filter id="card-bump">
+    <feTurbulence result="noise" numOctaves="3" baseFrequency="0.7" type="fractalNoise"></feTurbulence>
+    <feSpecularLighting in="noise" result="specular" lighting-color="#fffffc" specularExponent="25" specularConstant="0.8" surfaceScale="0.15">
+      <fePointLight z="210" y="100" x="100"></fePointLight>
+    </feSpecularLighting>
+    <feComposite result="noise2" operator="in" in="specular" in2="SourceGraphic"></feComposite>
+    <feBlend mode="screen" in2="noise2" in="SourceGraphic"></feBlend>
+  </filter>
+</svg>
 
 <script src="js/star-border.js?v=1"></script>
 <script src="js/app.js?v=4"></script>

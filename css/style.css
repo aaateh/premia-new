@@ -476,33 +476,22 @@ body.menu-open .header {
 
 .card p { font-size: 16px; line-height: 1.6; }
 
-/* ---------- карточки участников: голографическое свечение ---------- */
-
-.participant-card::before {
-  background: conic-gradient(
-    from 200deg,
-    rgba(255, 107, 254, .62),
-    rgba(0, 249, 248, .55),
-    rgba(0, 129, 253, .62),
-    rgba(238, 240, 188, .5),
-    rgba(255, 107, 254, .62)
-  );
-}
+/* ---------- карточки участников: серебро + голографическая анимация ---------- */
 
 .participant-card {
-  --card-surface: #0B0809;
-  --scene-ink: #F5F0EB;
-  --scene-muted: #C8C2BC;
+  --card-border: #BEBEB8;
+  --scene-ink: #25292E;
+  --scene-muted: #4A4D48;
   color: var(--scene-ink);
-  filter: drop-shadow(0 22px 34px rgba(20, 12, 8, .38))
-          drop-shadow(0 4px 10px rgba(20, 12, 8, .22));
+  filter: drop-shadow(0 20px 30px rgba(20, 16, 12, .28))
+          drop-shadow(0 4px 10px rgba(20, 16, 12, .16));
   transition: transform .35s var(--ease), filter .35s var(--ease);
 }
 
 .participant-card:hover {
   transform: translateY(-4px);
-  filter: drop-shadow(0 28px 40px rgba(20, 12, 8, .45))
-          drop-shadow(0 6px 12px rgba(20, 12, 8, .26));
+  filter: drop-shadow(0 26px 38px rgba(20, 16, 12, .34))
+          drop-shadow(0 6px 12px rgba(20, 16, 12, .2));
 }
 
 .participant-card > :not(.card__aurora) {
@@ -524,65 +513,80 @@ body.menu-open .header {
     0 100%
   );
   pointer-events: none;
+  isolation: isolate;
 }
 
-.card__aurora::before {
-  content: "";
+/* серебряная подложка с металлической фактурой */
+.card__silver {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      135deg,
+      #FFFFFF 0%,
+      #C6C6C0 26%,
+      #F4F4EF 48%,
+      #B8B8B2 72%,
+      #ECECE6 100%
+    );
+  filter: url(#card-bump);
+}
+
+/* цветные лучи, вращающиеся поверх серебра */
+.card__holo {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 165%;
+  width: 170%;
   aspect-ratio: 1;
-  margin: -82.5% 0 0 -82.5%;
+  margin: -85% 0 0 -85%;
   background: conic-gradient(
     from 0deg,
-    #ff6bfe,
-    #00f9f8,
-    #0081fd,
-    #eef0bc,
-    #ff6bfe,
-    #00f9f8,
-    #ff6bfe
+    #C9C9C4,
+    #FF6BFE,
+    #00F9F8,
+    #E4E4DE,
+    #0081FD,
+    #EEF0BC,
+    #0081FD,
+    #FF6BFE,
+    #C9C9C4
   );
-  filter: blur(20px) saturate(1.2);
-  opacity: .3;
-  animation: aurora-spin 7s linear infinite;
+  filter: blur(18px);
+  mix-blend-mode: overlay;
+  opacity: .62;
+  animation: aurora-spin 8s linear infinite;
   will-change: transform;
 }
 
+/* перелив цвета: слой разницы медленно едет, как на билете */
 .card__aurora::after {
   content: "";
   position: absolute;
   inset: 0;
-  background-image:
-    linear-gradient(
-      115deg,
-      rgba(255, 255, 255, 0) 38%,
-      rgba(255, 255, 255, .24) 48%,
-      rgba(255, 255, 255, 0) 58%
-    ),
-    linear-gradient(
-      180deg,
-      rgba(8, 6, 7, .3) 0%,
-      rgba(8, 6, 7, .64) 40%,
-      rgba(8, 6, 7, .9) 100%
-    );
-  background-size: 260% 100%, 100% 100%;
-  background-repeat: no-repeat;
-  animation: aurora-sheen 4.5s ease-in-out infinite alternate;
-}
-
-@keyframes aurora-sheen {
-  0% { background-position: -70% 0, 0 0; }
-  100% { background-position: 170% 0, 0 0; }
+  background: linear-gradient(
+    180deg,
+    rgba(255, 0, 80, .18),
+    rgba(255, 0, 0, .08),
+    rgba(0, 255, 0, .14),
+    rgba(255, 0, 80, .18)
+  );
+  background-size: 100% 300%;
+  mix-blend-mode: difference;
+  animation: aurora-shift 5s ease-in-out infinite alternate;
 }
 
 @keyframes aurora-spin {
   to { transform: rotate(360deg); }
 }
 
+@keyframes aurora-shift {
+  from { background-position: 0 0; }
+  to { background-position: 0 500px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .card__aurora::before,
+  .card__holo,
   .card__aurora::after { animation: none; }
   .participant-card { transition: none; }
   .participant-card:hover { transform: none; }
