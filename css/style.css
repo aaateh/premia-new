@@ -454,8 +454,8 @@ body.menu-open .header {
 
 .card__icon {
   flex: none;
-  width: 34px;
-  height: 34px;
+  width: 52px;
+  height: 52px;
   color: var(--scene-ink);
 }
 
@@ -645,7 +645,7 @@ body.menu-open .header {
 /* ---------- стоимость ---------- */
 
 .price-card { gap: 10px; padding: 32px; }
-.price-card h3 { font-size: 20px; }
+.price-card h3 { font-family: var(--font-base); font-size: 20px; font-weight: 600; }
 
 .price {
   margin-top: 10px;
@@ -670,7 +670,8 @@ body.menu-open .header {
 }
 
 .price-card p { font-size: 16px; }
-.price-card .btn { align-self: flex-start; margin-top: auto; }
+.price-card__action { margin-top: auto; padding-top: 18px; }
+.price-card .btn { align-self: flex-start; }
 
 /* ---------- шаги ---------- */
 
