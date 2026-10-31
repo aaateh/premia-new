@@ -475,6 +475,94 @@ body.menu-open .header {
 }
 
 .card p { font-size: 16px; line-height: 1.6; }
+
+/* ---------- карточки участников: голографическое свечение ---------- */
+
+.participant-card::before {
+  background: conic-gradient(
+    from 200deg,
+    rgba(255, 107, 254, .62),
+    rgba(0, 249, 248, .55),
+    rgba(0, 129, 253, .62),
+    rgba(238, 240, 188, .5),
+    rgba(255, 107, 254, .62)
+  );
+}
+
+.participant-card {
+  --card-surface: #0B0809;
+  --scene-ink: #F5F0EB;
+  --scene-muted: #C8C2BC;
+  color: var(--scene-ink);
+  filter: drop-shadow(0 22px 34px rgba(20, 12, 8, .38))
+          drop-shadow(0 4px 10px rgba(20, 12, 8, .22));
+}
+
+.participant-card > :not(.card__aurora) {
+  position: relative;
+  z-index: 1;
+}
+
+.card__aurora {
+  position: absolute;
+  inset: 2px;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: var(--radius);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--card-cut-x)) 0,
+    100% var(--card-cut-y),
+    100% 100%,
+    0 100%
+  );
+  pointer-events: none;
+}
+
+.card__aurora::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 165%;
+  aspect-ratio: 1;
+  margin: -82.5% 0 0 -82.5%;
+  background: conic-gradient(
+    from 0deg,
+    #ff6bfe,
+    #00f9f8,
+    #0081fd,
+    #eef0bc,
+    #ff6bfe,
+    #00f9f8,
+    #ff6bfe
+  );
+  filter: blur(24px) saturate(1.2);
+  opacity: .3;
+  animation: aurora-spin 22s linear infinite;
+  will-change: transform;
+}
+
+.card__aurora::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 6, 7, .3) 0%,
+    rgba(8, 6, 7, .64) 40%,
+    rgba(8, 6, 7, .9) 100%
+  );
+}
+
+@keyframes aurora-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card__aurora::before { animation: none; }
+}
+
 .card h3 { margin-top: 2px; }
 
 /* ---------- миссия и принципы ---------- */
