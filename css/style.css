@@ -265,16 +265,16 @@ body.menu-open .header {
 
 .hero { padding: clamp(56px, 7vw, 104px) 0 clamp(56px, 7vw, 94px); }
 
-.hero__grid {
+.hero__top {
   display: grid;
   grid-template-columns: minmax(0, 1.18fr) minmax(280px, .82fr);
-  align-items: end;
+  align-items: start;
   gap: clamp(36px, 5vw, 72px);
 }
 
 .hero__brand {
   width: min(100%, 460px);
-  margin: 0 0 30px;
+  margin: 0;
 }
 
 .hero__logo {
@@ -283,16 +283,17 @@ body.menu-open .header {
 }
 
 .hero__sub {
-  max-width: 520px;
-  margin-bottom: 28px;
+  max-width: none;
+  margin: clamp(36px, 4vw, 58px) 0 24px;
   color: var(--scene-ink);
-  font-family: var(--invitation-font);
-  font-size: var(--fs-prose);
-  font-weight: 400;
-  line-height: 1.35;
+  font-family: var(--font-base);
+  font-size: clamp(34px, 4.6vw, 56px);
+  font-weight: 700;
+  letter-spacing: -.015em;
+  line-height: 1.06;
 }
 
-.hero__text { max-width: 560px; }
+.hero__text { max-width: none; }
 .hero__text p { color: var(--scene-ink); }
 .hero__text .muted { font-size: 16px; }
 .hero__text p + p { margin-top: 14px; }
@@ -531,8 +532,10 @@ body.menu-open .header {
   grid-column: 2;
   grid-row: 1 / span 2;
   align-self: center;
+  justify-self: end;
   width: 100%;
   height: auto;
+  margin-right: -28px;   /* к правому краю карточки, лишнее срежет clip-path */
 }
 
 /* ---------- миссия и принципы ---------- */
@@ -701,7 +704,7 @@ body.menu-open .header {
 
 .cta-strip__figure {
   flex: none;
-  width: clamp(180px, 22vw, 260px);
+  width: clamp(144px, 17.6vw, 208px);
   height: auto;
   mix-blend-mode: multiply;   /* белый фон иллюстрации растворяется в бумаге */
 }
@@ -1328,7 +1331,7 @@ body.menu-open .header {
 }
 
 @media (max-width: 900px) {
-  .hero__grid { grid-template-columns: 1fr; gap: 36px; }
+  .hero__top { grid-template-columns: 1fr; gap: 36px; }
   .hero__aside {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1354,6 +1357,7 @@ body.menu-open .header {
     justify-self: start;
     width: min(100%, 168px);
     margin-top: 8px;
+    margin-right: 0;
   }
 
   .nom-list { grid-template-columns: 1fr; }
