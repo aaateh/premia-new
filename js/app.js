@@ -49,6 +49,7 @@
 
           details.dataset.animating = '1';
           var start = details.offsetHeight;
+          var panel = details.querySelector('.nom-group__body');
           details.style.overflow = 'hidden';
 
           function finish() {
@@ -63,24 +64,42 @@
             var end = details.offsetHeight;
             details.style.height = start + 'px';
             var anim = details.animate([
-              { height: start + 'px', opacity: .65 },
-              { height: end + 'px', opacity: 1 }
+              { height: start + 'px' },
+              { height: end + 'px' }
             ], {
-              duration: 280,
-              easing: 'cubic-bezier(.22, 1, .36, 1)'
+              duration: 440,
+              easing: 'cubic-bezier(.16, 1, .3, 1)'
             });
+            if (panel) {
+              panel.animate([
+                { opacity: 0, transform: 'translateY(-12px)', filter: 'blur(5px)' },
+                { opacity: 1, transform: 'translateY(0)', filter: 'blur(0)' }
+              ], {
+                duration: 440,
+                easing: 'cubic-bezier(.16, 1, .3, 1)'
+              });
+            }
             anim.onfinish = finish;
             anim.oncancel = finish;
           } else {
             var border = details.offsetHeight - details.clientHeight;
             var end = summary.offsetHeight + border;
             var anim = details.animate([
-              { height: start + 'px', opacity: 1 },
-              { height: end + 'px', opacity: .65 }
+              { height: start + 'px' },
+              { height: end + 'px' }
             ], {
-              duration: 240,
-              easing: 'cubic-bezier(.22, 1, .36, 1)'
+              duration: 340,
+              easing: 'cubic-bezier(.4, 0, .2, 1)'
             });
+            if (panel) {
+              panel.animate([
+                { opacity: 1, transform: 'translateY(0)', filter: 'blur(0)' },
+                { opacity: 0, transform: 'translateY(-8px)', filter: 'blur(4px)' }
+              ], {
+                duration: 340,
+                easing: 'cubic-bezier(.4, 0, .2, 1)'
+              });
+            }
             anim.onfinish = function () {
               details.open = false;
               finish();
@@ -93,6 +112,36 @@
   }
 
   enhanceDetails();
+
+  // топор плавно поворачивается при прокрутке секции «Принципы»
+  (function axeOnScroll() {
+    var axe = document.querySelector('.axe');
+    var section = document.getElementById('principles');
+    if (!axe || !section) return;
+    if (!window.matchMedia || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var raf = 0;
+
+    function update() {
+      raf = 0;
+      if (getComputedStyle(axe).display === 'none') return;
+      var rect = section.getBoundingClientRect();
+      var vh = window.innerHeight || 1;
+      if (rect.bottom < -120 || rect.top > vh + 120) return;
+
+      var p = (vh - rect.top) / (vh + rect.height);
+      p = p < 0 ? 0 : p > 1 ? 1 : p;
+      axe.style.transform = 'rotate(' + (4 - p * 12).toFixed(2) + 'deg)';
+    }
+
+    function onScroll() {
+      if (!raf) raf = requestAnimationFrame(update);
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    update();
+  })();
 
   var burger = document.getElementById('burger');
   var nav = document.getElementById('nav');

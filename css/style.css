@@ -564,6 +564,7 @@ body.menu-open .header {
 .nom-group[open] { border-color: #C8C2BC80; }
 
 .nom-group__summary {
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: 20px;
@@ -574,6 +575,23 @@ body.menu-open .header {
   -webkit-user-select: none;
   transition: background .2s var(--ease);
 }
+
+/* оранжевая линия-«протяжка» по нижнему краю при раскрытии */
+.nom-group__summary::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: var(--brand-accent);
+  pointer-events: none;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .5s var(--ease);
+}
+
+.nom-group[open] .nom-group__summary::after { transform: scaleX(1); }
 
 .nom-group__summary::-webkit-details-marker { display: none; }
 .nom-group__summary:hover { background: var(--control-surface); }
@@ -586,8 +604,10 @@ body.menu-open .header {
   margin-top: 1px;
   border: 1px solid var(--rule-strong);
   border-radius: 50%;
-  transition: border-color .2s var(--ease);
+  transition: border-color .2s var(--ease), transform .45s var(--ease);
 }
+
+.nom-group[open] .nom-group__toggle { transform: rotate(180deg); }
 
 .nom-group__toggle::before,
 .nom-group__toggle::after {
@@ -909,6 +929,33 @@ body.menu-open .header {
 
 /* ---------- результаты ---------- */
 
+/* ступенчатые карточки + таймлайн над ними */
+.awards { position: relative; }
+
+.awards-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 130px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.awards-line svg { display: block; width: 100%; height: 100%; }
+
+.awards-grid {
+  position: relative;
+  z-index: 2;
+  align-items: end;
+}
+
+.awards-grid .card:nth-child(1) { min-height: 290px; }
+.awards-grid .card:nth-child(2) { min-height: 350px; }
+.awards-grid .card:nth-child(3) { min-height: 410px; }
+
+.awards-dot { display: none; }
+
 .awards-note {
   max-width: 720px;
   margin-top: 28px;
@@ -959,6 +1006,7 @@ body.menu-open .header {
   right: 0;
   width: 300px;
   z-index: 1;
+  transform-origin: 100% 100%;
 }
 
 .axe img {
@@ -1301,6 +1349,10 @@ body.menu-open .header {
 
   .grid--3, .grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
+  .awards-line { display: none; }
+  .awards-grid { align-items: stretch; }
+  #awards .awards-grid .card { min-height: 0; }
+
   .header__inner { min-height: 80px; }
 
   .burger { display: block; }
@@ -1390,6 +1442,27 @@ body.menu-open .header {
 
   .grid--3, .grid--4, .grid--2 { grid-template-columns: 1fr; }
   .card { padding: 24px; --card-cut-x: 56px; --card-cut-y: 46px; }
+
+  .awards-grid { padding-left: 20px; }
+  .awards-grid::before {
+    content: "";
+    position: absolute;
+    top: 12px;
+    bottom: 12px;
+    left: 6px;
+    width: 1px;
+    background: var(--rule-strong);
+  }
+  .awards-dot {
+    display: block;
+    position: absolute;
+    top: 34px;
+    left: -17px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--brand-accent);
+  }
 
   .nom-group__summary { gap: 12px; padding: 20px; }
   .nom-group__title h3 { font-size: 20px; }
