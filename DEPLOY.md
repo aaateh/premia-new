@@ -14,7 +14,7 @@ jury.html
 css/tokens.css
 css/style.css
 js/            (если менялся)
-img/           (2krug.png, rumantsev.jpg)
+img/           (rumantsev.jpg, topor.png, characters/*.webp, illustrations/*.webp)
 logo.svg       (если менялся)
 fonts/         (только 5 подключённых файлов Dela / Involve / Golos)
 ```
@@ -56,4 +56,4 @@ curl -s -o /dev/null -w '%{http_code}\n' https://marketingawards.ru/new/jury.htm
 
 Версии `?v=` должны совпасть с локальными в `index.html` и `jury.html`.
 Дополнительно открыть страницу в браузере и проверить консоль и картинки
-`img/rumantsev.jpg`, `img/2krug.png`.
+`img/rumantsev.jpg`, `img/characters/1-web-developer.webp`, `img/illustrations/1-briefcase.webp`.

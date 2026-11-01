@@ -114,10 +114,6 @@ a:hover { text-decoration: none; }
   pointer-events: none;
 }
 
-.btn .star-border__light {
-  filter: brightness(1.6) drop-shadow(0 0 3px var(--fire-glow));
-}
-
 .btn:hover {
   background: var(--control-surface);
   text-decoration: none;
@@ -482,6 +478,42 @@ body.menu-open .header {
 
 .card h3 { margin-top: 2px; }
 
+/* «Участники»: без серого контура, картинка снизу во всю ширину текста */
+#participants .card::before { display: none; }
+
+#participants .card__figure {
+  width: 100%;
+  height: auto;
+  margin-top: auto;            /* картинки прижаты к низу и стоят на одной линии */
+  padding-top: 10px;
+  mix-blend-mode: multiply;    /* белый фон иллюстрации растворяется в бумаге */
+}
+
+/* «Участие»: белая карточка без контура, картинка справа, текст инвертирован */
+#benefits .card {
+  --card-surface: #FFFFFF;
+  --card-surface-hover: #FFFFFF;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(160px, 19vw, 240px);
+  grid-template-rows: auto 1fr;
+  align-items: start;
+  column-gap: clamp(24px, 4vw, 56px);
+  color: var(--ink);
+}
+
+#benefits .card::before { display: none; }
+#benefits .card h3 { grid-column: 1; grid-row: 1; }
+#benefits .card p { grid-column: 1; grid-row: 2; }
+#benefits .card .muted { color: var(--muted); }
+
+#benefits .card__figure {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  width: 100%;
+  height: auto;
+}
+
 /* ---------- миссия и принципы ---------- */
 
 .mission { max-width: 900px; }
@@ -581,6 +613,13 @@ body.menu-open .header {
   border-top: 1px solid var(--rule);
 }
 
+/* кнопка группы — по правому краю */
+.nom-group__body > .btn {
+  display: flex;
+  width: fit-content;
+  margin-left: auto;
+}
+
 .nom-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -635,6 +674,16 @@ body.menu-open .header {
 .cta-strip__text { max-width: 620px; }
 .cta-strip__text h3 { font-size: 20px; line-height: 1.3; }
 .cta-strip__text p { margin-top: 8px; font-size: 16px; }
+
+/* «Не уверены, какую номинацию выбрать?»: картинка справа, кнопка под текстом */
+.cta-strip--figure .cta-strip__text .btn { margin-top: 22px; }
+
+.cta-strip__figure {
+  flex: none;
+  width: clamp(180px, 22vw, 260px);
+  height: auto;
+  mix-blend-mode: multiply;   /* белый фон иллюстрации растворяется в бумаге */
+}
 
 .note-strong {
   max-width: 780px;
@@ -882,8 +931,8 @@ body.menu-open .header {
 
 .axe {
   position: absolute;
+  top: 84px;
   right: 0;
-  bottom: 24px;
   width: 300px;
   z-index: 1;
 }
@@ -1190,10 +1239,6 @@ body.menu-open .header {
   background: #25292E1A;
 }
 
-.section--soft .btn .star-border__light {
-  filter: none;
-}
-
 .section--soft .card {
   --card-border: var(--paper-rule-strong);
   --card-surface: var(--paper-raised);
@@ -1279,6 +1324,16 @@ body.menu-open .header {
 
   .grid--3, .grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .grid--2 { grid-template-columns: 1fr; }
+
+  #benefits .card { grid-template-columns: minmax(0, 1fr); }
+  #benefits .card__figure {
+    grid-column: 1;
+    grid-row: 3;
+    align-self: start;
+    justify-self: start;
+    width: min(100%, 240px);
+    margin-top: 8px;
+  }
 
   .nom-list { grid-template-columns: 1fr; }
 

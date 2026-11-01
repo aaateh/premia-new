@@ -3,7 +3,16 @@
    Порт canvas-эффекта из бандла сайта (React-компонент StarBorder).
    Геометрия и математика сохранены: путь по скруглённому прямоугольнику,
    бегущий блик с градиентным хвостом, свечение головы, вспышка по клику,
-   «лишний круг» по наведению, точки-искры.
+   «лишний круг» по наведению.
+
+   Оптимизация (v1.1):
+   • анимация останавливается, когда кнопки нет в кадре (IntersectionObserver)
+     и когда вкладка/окно неактивны (visibilitychange);
+   • canvas выделяется только при первом появлении в кадре;
+   • путь по рамке считается один раз на размер, а не каждый кадр;
+   • свечение головы — заранее нарисованный спрайт вместо градиента на кадр;
+   • хвост блика рисуется пакетами по прозрачности: ~24 stroke вместо ~180;
+   • в простое 30 кадров/с, при наведении/фокусе/клике — 60.
 
    Использование:
      <a class="star-border" href="..." style="--star-border-radius:4px;--star-border-thickness:1px">
@@ -24,6 +33,11 @@
     var TAU = Math.PI * 2;
     var WHITE = [255, 255, 255];
 
+    var IDLE_FPS = 30;       // кадров в секунду в простое
+    var ACTIVE_FPS = 60;     // при наведении, фокусе и вспышке
+    var TRAIL_MAX_STEPS = 70;   // точек вдоль хвоста (шаг 3px)
+    var TRAIL_BUCKETS = 12;     // пакетов прозрачности на хвост
+
     var THEMES = {
         dark: { light: "#ffffff" },
         light: { light: "#18181b" }
@@ -38,7 +52,6 @@
     var rgba = function (c, a) {
         return "rgba(" + Math.round(c[0]) + ", " + Math.round(c[1]) + ", " + Math.round(c[2]) + ", " + clamp(a, 0, 1).toFixed(3) + ")";
     };
-
     /* ---------- разбор цвета ---------- */
     var colorCtx = null;
     function parseColor(value) {
@@ -174,17 +187,24 @@
             paused: opts.paused
         };
 
-        var reduced = opts.respectReducedMotion &&
-            !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+        var motionQuery = opts.respectReducedMotion && window.matchMedia
+            ? window.matchMedia("(prefers-reduced-motion: reduce)")
+            : null;
+        var reduced = !!(motionQuery && motionQuery.matches);
 
-        var offscreen = document.createElement("canvas");
-        var offCtx = offscreen.getContext("2d");
+        // тёплый цвет ореола берём из токена дизайн-системы
+        var fireColor = WHITE;
+        try {
+            var fireValue = getComputedStyle(el).getPropertyValue("--fire-glow").trim();
+            fireColor = parseColor(fireValue || "#FF7B39");
+        } catch (e) { /* остаёмся на белом */ }
 
         var state = {
             width: 0, height: 0, dpr: 1,
             phase: 0, velocity: 0, motion: 0, lap: -1, time: 0,
             reveal: 0, boost: 0, flash: 0,
-            hovered: false, focused: false, pointerX: 0, pointerY: 0, visible: true
+            hovered: false, focused: false, pointerX: 0, pointerY: 0,
+            visible: !window.IntersectionObserver
         };
 
         var pulses = [];
@@ -193,25 +213,48 @@
         var head = { x: 0, y: 0, nx: 0, ny: -1 };
 
         var raf = 0;
-        var lastTime = performance.now();
+        var lastTime = 0;
+        var lastDraw = 0;
         var alive = true;
 
+        // кэш геометрии: пересчитывается только при изменении размера
+        var pathCache = null;
+        var pts = null;
+        // кэш спрайта свечения головы
+        var glow = { key: "", canvas: null };
+
         function metrics() {
-            return buildPath(
-                Math.max(1, state.width - cfg.thickness),
-                Math.max(1, state.height - cfg.thickness),
-                cfg.radius - cfg.thickness / 2
-            );
+            if (!pathCache) {
+                pathCache = buildPath(
+                    Math.max(1, state.width - cfg.thickness),
+                    Math.max(1, state.height - cfg.thickness),
+                    cfg.radius - cfg.thickness / 2
+                );
+            }
+            return pathCache;
         }
 
         function resize() {
-            state.width = el.offsetWidth;
-            state.height = el.offsetHeight;
-            state.dpr = Math.min(window.devicePixelRatio || 1, 2);
-            canvas.width = Math.max(1, Math.round((state.width + BLEED * 2) * state.dpr));
-            canvas.height = Math.max(1, Math.round((state.height + BLEED * 2) * state.dpr));
-            offscreen.width = canvas.width;
-            offscreen.height = canvas.height;
+            if (!state.visible) return;          // бэк-стор выделим при первом появлении в кадре
+
+            var w = el.offsetWidth;
+            var h = el.offsetHeight;
+            var dpr = Math.min(window.devicePixelRatio || 1, 2);
+            if (w === state.width && h === state.height && dpr === state.dpr && canvas.width > 1) {
+                schedule();
+                return;                          // размер не изменился — canvas не перевыделяем
+            }
+
+            state.width = w;
+            state.height = h;
+            state.dpr = dpr;
+            canvas.width = Math.max(1, Math.round((w + BLEED * 2) * dpr));
+            canvas.height = Math.max(1, Math.round((h + BLEED * 2) * dpr));
+
+            pathCache = null;
+            glow.key = "";
+            pts = new Float32Array((TRAIL_MAX_STEPS + 1) * 2);
+            lastDraw = 0;
             schedule();
         }
 
@@ -223,33 +266,94 @@
             ];
         }
 
-        function line(x1, y1, x2, y2, width, style, target) {
-            var c = target || ctx;
-            c.lineWidth = width;
-            c.strokeStyle = style;
-            c.beginPath();
-            c.moveTo(x1, y1);
-            c.lineTo(x2, y2);
-            c.stroke();
+        /* ---------- свечение головы: спрайт вместо градиента на каждый кадр ---------- */
+        function glowSprite(radius) {
+            var key = cfg.color + "|" + radius + "|" + state.dpr;
+            if (glow.key === key) return glow.canvas;
+
+            var size = Math.max(8, Math.ceil(radius * 2 * state.dpr));
+            var cv = document.createElement("canvas");
+            cv.width = size;
+            cv.height = size;
+            var c = cv.getContext("2d");
+            if (!c) return null;
+
+            var g = c.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+            g.addColorStop(0, rgba(colors.head, 1));
+            g.addColorStop(.2, rgba(colors.head, .4));
+            g.addColorStop(.5, rgba(colors.head, .1));
+            g.addColorStop(1, rgba(colors.head, 0));
+            c.fillStyle = g;
+            c.fillRect(0, 0, size, size);
+
+            glow.key = key;
+            glow.canvas = cv;
+            return cv;
         }
 
-        /* хвост блика: набор коротких отрезков вдоль пути с затуханием */
-        function trail(path, from, length, dir, alpha, roundCap) {
+        /* хвост блика: точки вдоль пути + пакеты по прозрачности.
+           Раньше на каждый пиксель хвоста шёл отдельный stroke (до ~180 за кадр),
+           теперь — ~24 stroke на весь хвост при том же виде. */
+        function trail(path, from, length, dir, alpha) {
             if (length < .5 || alpha <= 0) return;
-            var steps = clamp(Math.ceil(length / 2), 2, 90);
-            pointAt(path, from, head);
-            var px = head.x, py = head.y;
-            for (var i = 1; i <= steps; i++) {
+
+            var steps = clamp(Math.ceil(length / 3), 2, TRAIL_MAX_STEPS);
+            if (!pts || pts.length < (steps + 1) * 2) pts = new Float32Array((steps + 1) * 2);
+
+            for (var i = 0; i <= steps; i++) {
                 pointAt(path, from - dir * length * (i / steps), head);
-                var t = 1 - (i - .5) / steps;
+                pts[i * 2] = head.x;
+                pts[i * 2 + 1] = head.y;
+            }
+
+            var glowWidth = cfg.light ? 2 + 6 * cfg.glow : 4 + 10 * cfg.glow;
+            for (var b = 0; b < TRAIL_BUCKETS; b++) {
+                var t = (b + .5) / TRAIL_BUCKETS;
                 var w = t * t * alpha;
-                var col = lerpColor(colors.tail, colors.head, t);
-                if (!cfg.light) col = lerpColor(col, WHITE, Math.pow(t, 6) * .65);
-                ctx.lineCap = (roundCap && i === 1) ? "round" : "butt";
-                line(px, py, head.x, head.y, 2 + 6 * cfg.glow, rgba(col, w * (cfg.light ? .1 : .2) * cfg.glow));
-                line(px, py, head.x, head.y, cfg.thickness, rgba(col, w));
-                px = head.x;
-                py = head.y;
+                if (w < .003) continue;
+
+                // цвет сегмента: хвост → голова, на тёмном ещё подмешивается белый
+                var r = colors.tail[0] + (colors.head[0] - colors.tail[0]) * t;
+                var g = colors.tail[1] + (colors.head[1] - colors.tail[1]) * t;
+                var bl = colors.tail[2] + (colors.head[2] - colors.tail[2]) * t;
+                if (!cfg.light) {
+                    var k = Math.pow(t, 6) * .65;
+                    r += (255 - r) * k;
+                    g += (255 - g) * k;
+                    bl += (255 - bl) * k;
+                }
+                var coreCol = "rgba(" + Math.round(r) + ", " + Math.round(g) + ", " + Math.round(bl) + ", " + w.toFixed(3) + ")";
+
+                // тёплый ореол вокруг блика — в самом canvas, без filter: drop-shadow
+                var hw = w * (cfg.light ? .1 : .16) * cfg.glow;
+                var hr = r, hg = g, hb = bl;
+                if (!cfg.light) {
+                    hr += (fireColor[0] - hr) * .72;
+                    hg += (fireColor[1] - hg) * .72;
+                    hb += (fireColor[2] - hb) * .72;
+                }
+                var haloCol = "rgba(" + Math.round(hr) + ", " + Math.round(hg) + ", " + Math.round(hb) + ", " + hw.toFixed(3) + ")";
+
+                ctx.beginPath();
+                var drawn = false;
+                for (var s = 1; s <= steps; s++) {
+                    var ts = 1 - (s - .5) / steps;
+                    if (Math.min(TRAIL_BUCKETS - 1, Math.floor(ts * TRAIL_BUCKETS)) !== b) continue;
+                    if (!drawn) {
+                        ctx.moveTo(pts[(s - 1) * 2], pts[(s - 1) * 2 + 1]);
+                        drawn = true;
+                    }
+                    ctx.lineTo(pts[s * 2], pts[s * 2 + 1]);
+                }
+                if (!drawn) continue;
+
+                ctx.lineCap = "butt";
+                ctx.lineWidth = glowWidth;
+                ctx.strokeStyle = haloCol;
+                ctx.stroke();
+                ctx.lineWidth = cfg.thickness;
+                ctx.strokeStyle = coreCol;
+                ctx.stroke();
             }
         }
 
@@ -257,14 +361,23 @@
         function headGlow(x, y, alpha, twinkle) {
             if (alpha <= 0) return;
             var radius = (12 + 40 * cfg.glow) * (cfg.light ? .6 : 1);
-            var g = ctx.createRadialGradient(x, y, 0, x, y, radius);
             var peak = (cfg.light ? .08 : .4) * cfg.glow * alpha;
-            g.addColorStop(0, rgba(colors.head, peak));
-            g.addColorStop(.2, rgba(colors.head, peak * .4));
-            g.addColorStop(.5, rgba(colors.head, peak * .1));
-            g.addColorStop(1, rgba(colors.head, 0));
-            ctx.fillStyle = g;
-            ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+            var sprite = glowSprite(radius);
+
+            if (sprite) {
+                var prevAlpha = ctx.globalAlpha;
+                ctx.globalAlpha = clamp(peak, 0, 1);
+                ctx.drawImage(sprite, x - radius, y - radius, radius * 2, radius * 2);
+                ctx.globalAlpha = prevAlpha;
+            } else {
+                var g = ctx.createRadialGradient(x, y, 0, x, y, radius);
+                g.addColorStop(0, rgba(colors.head, peak));
+                g.addColorStop(.2, rgba(colors.head, peak * .4));
+                g.addColorStop(.5, rgba(colors.head, peak * .1));
+                g.addColorStop(1, rgba(colors.head, 0));
+                ctx.fillStyle = g;
+                ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+            }
 
             if (!cfg.sparkle) return;
             var r2 = (1 + cfg.thickness * .6) * (cfg.light ? .85 : 1);
@@ -284,13 +397,22 @@
             lg.addColorStop(0, rgba(colors.head, 0));
             lg.addColorStop(.5, rgba(mid, alpha * .95));
             lg.addColorStop(1, rgba(colors.head, 0));
-            line(x - arm, y, x + arm, y, cfg.light ? .75 : 1, lg);
+            ctx.lineWidth = cfg.light ? .75 : 1;
+            ctx.strokeStyle = lg;
+            ctx.beginPath();
+            ctx.moveTo(x - arm, y);
+            ctx.lineTo(x + arm, y);
+            ctx.stroke();
 
             var vg = ctx.createLinearGradient(x, y - arm, x, y + arm);
             vg.addColorStop(0, rgba(colors.head, 0));
             vg.addColorStop(.5, rgba(mid, alpha * .95));
             vg.addColorStop(1, rgba(colors.head, 0));
-            line(x, y - arm, x, y + arm, cfg.light ? .75 : 1, vg);
+            ctx.strokeStyle = vg;
+            ctx.beginPath();
+            ctx.moveTo(x, y - arm);
+            ctx.lineTo(x, y + arm);
+            ctx.stroke();
         }
 
         function spawnSparks(x, y, nx, ny, motion) {
@@ -343,21 +465,23 @@
                 var pos = state.phase + i * perStar;
                 trail(path, pos, trailLen, dir, Math.min(1, revealAlpha));
                 if (fade > .01) {
-                    trail(path, pos, headLen, 1, fade, false);
-                    trail(path, pos, headLen, -1, fade, false);
+                    trail(path, pos, headLen, 1, fade);
+                    trail(path, pos, headLen, -1, fade);
                 }
             }
 
-            pulses.forEach(function (p) {
-                var a = Math.pow(1 - p.age / .65, 2);
-                var dist = total / 2 * (1 - Math.pow(1 - Math.min(1, p.age / .5), 2));
+            for (var p = 0; p < pulses.length; p++) {
+                var pulse = pulses[p];
+                var a = Math.pow(1 - pulse.age / .65, 2);
+                var dist = total / 2 * (1 - Math.pow(1 - Math.min(1, pulse.age / .5), 2));
                 var len = Math.min(dist, total * .16);
-                [1, -1].forEach(function (d) {
-                    trail(path, p.origin + d * dist, len, d, a);
-                    pointAt(path, p.origin + d * dist, head);
-                    headGlow(head.x, head.y, a * .8, .8);
-                });
-            });
+                trail(path, pulse.origin + dist, len, 1, a);
+                pointAt(path, pulse.origin + dist, head);
+                headGlow(head.x, head.y, a * .8, .8);
+                trail(path, pulse.origin - dist, len, -1, a);
+                pointAt(path, pulse.origin - dist, head);
+                headGlow(head.x, head.y, a * .8, .8);
+            }
 
             for (var j = 0; j < cfg.stars; j++) {
                 pointAt(path, state.phase + j * perStar, head);
@@ -365,21 +489,22 @@
                 headGlow(head.x, head.y, Math.min(1.3, revealAlpha), twinkle);
             }
 
-            sparks.forEach(function (s) {
-                var life = 1 - s.age / s.life;
-                var flick = .45 + .55 * Math.sin(state.time * 20 + s.seed);
-                var a = life * flick * state.reveal * (cfg.light ? .35 : .9);
-                if (a <= .01) return;
-                ctx.fillStyle = rgba(cfg.light ? colors.head : lerpColor(colors.tail, WHITE, .6), a);
+            for (var s = 0; s < sparks.length; s++) {
+                var sp = sparks[s];
+                var life = 1 - sp.age / sp.life;
+                var flick = .45 + .55 * Math.sin(state.time * 20 + sp.seed);
+                var sa = life * flick * state.reveal * (cfg.light ? .35 : .9);
+                if (sa <= .01) continue;
+                ctx.fillStyle = rgba(cfg.light ? colors.head : lerpColor(colors.tail, WHITE, .6), sa);
                 ctx.beginPath();
-                ctx.arc(s.x, s.y, s.size * (.6 + .4 * life), 0, TAU);
+                ctx.arc(sp.x, sp.y, sp.size * (.6 + .4 * life), 0, TAU);
                 ctx.fill();
-            });
+            }
         }
 
         function frame(now) {
             raf = 0;
-            if (!alive) return;
+            if (!alive || document.hidden || !state.visible) return;   // вкладка неактивна или кнопка вне кадра
 
             var dt = Math.min(.05, Math.max(.001, (now - lastTime) / 1000));
             lastTime = now;
@@ -390,6 +515,7 @@
                 colors.key = key;
                 colors.head = parseColor(cfg.color);
                 colors.tail = parseColor(cfg.trailColor);
+                glow.key = "";
             }
 
             var path = metrics();
@@ -408,6 +534,8 @@
 
             state.flash *= Math.exp(-dt / .22);
             state.velocity += (baseSpeed - state.velocity) * (1 - Math.exp(-dt / .45));
+            // останавливаемся точно: иначе затухающая скорость держит rAF вечно
+            if (Math.abs(baseSpeed - state.velocity) < .05) state.velocity = baseSpeed;
 
             var extra = 0;
             if (state.lap >= 0) {
@@ -434,35 +562,45 @@
                 if (sp.age >= sp.life) sparks.splice(s, 1);
             }
 
-            draw(path);
-
             var settling = Math.abs(revealTarget - state.reveal) > .002 ||
                 Math.abs(boostTarget - state.boost) > .002 ||
                 state.flash > .01 || pulses.length > 0 || sparks.length > 0;
             var moving = Math.abs(state.motion) > .05 || state.velocity !== 0 || state.lap >= 0;
             var lit = state.reveal > .002 || revealTarget > 0;
 
-            if (state.visible && (settling || (moving && lit) || state.hovered)) {
-                raf = requestAnimationFrame(frame);
+            if (!(settling || (moving && lit) || state.hovered)) {
+                lastDraw = 0;
+                return;                                   // анимация завершена — rAF больше не держим
             }
+
+            // в простое рисуем 30 кадров/с, при взаимодействии — 60
+            var frameGap = 1000 / (state.hovered || state.focused || state.flash > .02 || pulses.length ? ACTIVE_FPS : IDLE_FPS);
+            if (lastDraw && now - lastDraw < frameGap - 1.5) {
+                raf = requestAnimationFrame(frame);
+                return;
+            }
+            lastDraw = now;
+
+            draw(path);
+            raf = requestAnimationFrame(frame);
         }
 
         function schedule() {
-            if (raf || !alive || !state.visible) return;
+            if (raf || !alive || document.hidden || !state.visible) return;
             lastTime = performance.now();
             raf = requestAnimationFrame(frame);
         }
 
         /* ---------- события ---------- */
         function onEnter(e) {
+            if (!state.width || !state.height) resize();
             var pt = pointer(e);
             state.pointerX = pt[0];
             state.pointerY = pt[1];
             state.hovered = true;
 
             if (cfg.hover === "reveal" && state.reveal < .15) {
-                var path = metrics();
-                state.phase = nearestOnPath(path, state.pointerX - cfg.thickness / 2, state.pointerY - cfg.thickness / 2);
+                state.phase = nearestOnPath(metrics(), state.pointerX - cfg.thickness / 2, state.pointerY - cfg.thickness / 2);
                 state.velocity = 0;
             }
             if (cfg.hover === "lap" && state.lap < 0 && !reduced && !cfg.paused) state.lap = 0;
@@ -481,8 +619,7 @@
         function onPointerDown(e) {
             if (e.button !== 0 && e.pointerType === "mouse") return;
             var pt = pointer(e);
-            var path = metrics();
-            pulse(nearestOnPath(path, pt[0] - cfg.thickness / 2, pt[1] - cfg.thickness / 2));
+            pulse(nearestOnPath(metrics(), pt[0] - cfg.thickness / 2, pt[1] - cfg.thickness / 2));
         }
 
         function onClick(e) {
@@ -497,34 +634,67 @@
 
         function onBlur() { state.focused = false; schedule(); }
 
+        // вкладка скрыта — rAF не держим; вернулись — продолжаем с того же места
+        function onVisibility() {
+            if (document.hidden) {
+                if (raf) { cancelAnimationFrame(raf); raf = 0; }
+                return;
+            }
+            lastDraw = 0;
+            schedule();
+        }
+
+        function onMotionChange() {
+            reduced = !!(motionQuery && motionQuery.matches);
+            lastDraw = 0;
+            schedule();
+        }
+
         el.addEventListener("pointerenter", onEnter);
         el.addEventListener("pointerleave", onLeave);
         el.addEventListener("pointerdown", onPointerDown);
         el.addEventListener("click", onClick);
         el.addEventListener("focus", onFocus);
         el.addEventListener("blur", onBlur);
+        document.addEventListener("visibilitychange", onVisibility);
+        if (motionQuery) {
+            if (motionQuery.addEventListener) motionQuery.addEventListener("change", onMotionChange);
+            else if (motionQuery.addListener) motionQuery.addListener(onMotionChange);
+        }
 
         var ro = window.ResizeObserver ? new ResizeObserver(resize) : null;
         if (ro) ro.observe(el);
 
+        // canvas выделяется при первом появлении в кадре; анимация идёт только в кадре
         var io = window.IntersectionObserver ? new IntersectionObserver(function (entries) {
-            state.visible = entries.some(function (x) { return x.isIntersecting; });
-            if (state.visible) schedule();
-        }) : null;
+            var visible = entries.some(function (x) { return x.isIntersecting; });
+            if (visible === state.visible) return;
+            state.visible = visible;
+            if (visible) {
+                resize();
+                schedule();
+            }
+        }, { rootMargin: "100px" }) : null;
         if (io) io.observe(el);
-
-        resize();
+        else resize();
 
         var api = {
             element: el,
             canvas: canvas,
             options: cfg,
-            refresh: function () { resize(); },
-            set: function (patch) { Object.assign(cfg, patch); schedule(); },
+            refresh: function () { pathCache = null; resize(); },
+            set: function (patch) {
+                Object.assign(cfg, patch);
+                pathCache = null;
+                glow.key = "";
+                lastDraw = 0;
+                schedule();
+            },
             pulse: function () { pulse(state.phase); },
             destroy: function () {
                 alive = false;
                 cancelAnimationFrame(raf);
+                raf = 0;
                 if (ro) ro.disconnect();
                 if (io) io.disconnect();
                 el.removeEventListener("pointerenter", onEnter);
@@ -533,6 +703,11 @@
                 el.removeEventListener("click", onClick);
                 el.removeEventListener("focus", onFocus);
                 el.removeEventListener("blur", onBlur);
+                document.removeEventListener("visibilitychange", onVisibility);
+                if (motionQuery) {
+                    if (motionQuery.removeEventListener) motionQuery.removeEventListener("change", onMotionChange);
+                    else if (motionQuery.removeListener) motionQuery.removeListener(onMotionChange);
+                }
                 delete el.__starBorder;
             }
         };
@@ -547,5 +722,5 @@
         return list;
     }
 
-    global.StarBorder = { init: init, initAll: initAll, version: "1.0.0" };
+    global.StarBorder = { init: init, initAll: initAll, version: "1.1.0" };
 })(window);

@@ -21,6 +21,9 @@
 | Literata | 400, 500 | Copyright 2017 The Literata Project Authors (https://github.com/googlefonts/literata) |
 | Bona Nova | 700 | Copyright 2017 The Bona Nova Project Authors (https://github.com/kosmynkab/Bona-Nova) |
 | Anticva | 400 | Copyright (c) 2021, Konstantin Krastev |
+| Anton | 400 | Copyright 2020 The Anton Project Authors (https://github.com/googlefonts/Anton) |
+| JetBrains Mono | 300–800 | Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono) |
+| Oswald | 700 | Copyright 2016 The Oswald Project Authors (https://github.com/googlefonts/OswaldFont) |
 | Nyght Serif | 700 | Maksym Kobuzan |
 | Inter | 400, 500 | Copyright 2016 The Inter Project Authors |
 | Golos Text | 400 900 | Copyright 2019 The Golos Text Project Authors (https://github.com/googlefonts/golos-text) |
