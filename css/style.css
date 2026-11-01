@@ -1136,7 +1136,7 @@ body.menu-open .header {
 
 @keyframes awards-pulse {
   0%, 100% { transform: scale(1); }
-  9% { transform: scale(2); }
+  9% { transform: scale(2.2); }
   26% { transform: scale(1); }
 }
 
@@ -1217,7 +1217,8 @@ body.menu-open .header {
 
 @media (prefers-reduced-motion: reduce) {
   .axe img { transition: none; }
-  .awards-mark--pulse { animation: none; }
+  .awards-mark--pulse,
+  .awards-dot { animation: none; }
 }
 
 @media (max-width: 1399px) {
@@ -1541,13 +1542,16 @@ body.menu-open .header {
   .founders { margin: 0 -10px; }
   .founder { width: calc(100% - 20px); margin: 10px 10px 34px; }
 
-  /* топор — у правого края, частично за экраном; в потоке, чтобы не лезть в текст */
+  /* топор — у правого края над верхним текстом, частично за экраном,
+     и не занимает высоту в потоке */
   .section--principles { overflow: hidden; }
   .axe {
     display: block;
-    position: static;
-    width: min(52vw, 220px);
-    margin: 28px -44px 0 auto;
+    position: absolute;
+    top: -32px;
+    right: -40px;
+    width: min(36vw, 140px);
+    margin: 0;
   }
 }
 
@@ -1635,6 +1639,7 @@ body.menu-open .header {
 
   .cta-strip { flex-direction: column; align-items: flex-start; padding: 26px; }
   .cta-strip .btn { width: 100%; }
+  .cta-strip--figure .cta-strip__figure { align-self: center; }
 
   .footer__top { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .footer__top > div:first-child { grid-column: 1 / -1; }
@@ -1672,11 +1677,16 @@ body.menu-open .header {
     position: absolute;
     top: 34px;
     left: -17px;
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background: var(--brand-accent);
+    transform-origin: center;
+    animation: awards-pulse 7.2s ease-in-out infinite;
   }
+  .awards-grid .card:nth-child(1) .awards-dot { animation-delay: .3s; }
+  .awards-grid .card:nth-child(2) .awards-dot { animation-delay: 1.9s; }
+  .awards-grid .card:nth-child(3) .awards-dot { animation-delay: 3.5s; }
 
   .nom-group__summary { gap: 12px; padding: 20px; }
   .nom-group__title h3 { font-size: 20px; }
@@ -1693,6 +1703,15 @@ body.menu-open .header {
   .timeline { grid-template-columns: 1fr; gap: 26px; }
   .timeline-panel { padding: 24px; --panel-cut-x: 56px; --panel-cut-y: 46px; }
   .timeline__item { gap: 8px; }
+
+  /* разделитель между этапами — волнистая «змейка» таймлайна */
+  .timeline__item + .timeline__item {
+    padding-top: 14px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='10' viewBox='0 0 48 10'%3E%3Cpath d='M0 5Q6 0 12 5T24 5T36 5T48 5' fill='none' stroke='%23C8C2BC' stroke-opacity='.5' stroke-width='1'/%3E%3C/svg%3E");
+    background-repeat: repeat-x;
+    background-position: 0 0;
+    background-size: 48px 10px;
+  }
   .timeline__date { font-size: 16px; }
   .timeline__text { max-width: none; font-size: 16px; }
 

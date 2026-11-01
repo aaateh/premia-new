@@ -144,7 +144,7 @@
 
       var p = (vh - rect.top) / (vh + rect.height);
       p = p < 0 ? 0 : p > 1 ? 1 : p;
-      axe.style.transform = 'rotate(' + (4 - p * 12).toFixed(2) + 'deg)';
+      axe.style.transform = 'rotate(' + (10 - p * 28).toFixed(2) + 'deg)';
     }
 
     function onScroll() {
