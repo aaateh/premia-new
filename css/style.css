@@ -494,16 +494,34 @@ body.menu-open .header {
   --card-surface: #FFFFFF;
   --card-surface-hover: #FFFFFF;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(160px, 19vw, 240px);
+  grid-template-columns: minmax(0, 1fr) clamp(112px, 13.3vw, 168px);
   grid-template-rows: auto 1fr;
   align-items: start;
   column-gap: clamp(24px, 4vw, 56px);
   color: var(--ink);
+  /* обрезаем картинку по форме карточки, чтобы она не выходила за срезанный угол */
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--card-cut-x)) 0,
+    100% var(--card-cut-y),
+    100% 100%,
+    0 100%
+  );
 }
 
 #benefits .card::before { display: none; }
-#benefits .card h3 { grid-column: 1; grid-row: 1; }
-#benefits .card p { grid-column: 1; grid-row: 2; }
+#benefits .card h3 {
+  grid-column: 1;
+  grid-row: 1;
+  font-family: var(--font-base);
+  font-weight: 600;
+}
+#benefits .card p {
+  grid-column: 1;
+  grid-row: 2;
+  font-size: 20px;
+  line-height: 1.5;
+}
 #benefits .card .muted { color: var(--muted); }
 
 #benefits .card__figure {
@@ -1331,7 +1349,7 @@ body.menu-open .header {
     grid-row: 3;
     align-self: start;
     justify-self: start;
-    width: min(100%, 240px);
+    width: min(100%, 168px);
     margin-top: 8px;
   }
 
