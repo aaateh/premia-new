@@ -16,7 +16,32 @@
 | `mail/mail_partners.php` | обработчик: проверка капчи и отправка письма |
 | `mail/config.php` | получатель, тема, отправитель, SMTP |
 | `mail/config.local.php` | секреты (в `.gitignore`), загружается на сервер рядом с `config.php` |
-| `mail/PHPMailerAutoload.php`, `mail/class.*.php` | PHPMailer |
+| `mail/src/PHPMailer.php`, `mail/src/SMTP.php`, `mail/src/Exception.php` | PHPMailer 7 (PHP 8.5) |
+| `mail/PHPMailer-LICENSE.txt` | лицензия PHPMailer |
+
+## Требования хостинга
+
+- PHP **8.5** (выбран в настройках сайта Beget).
+- В корневом `.htaccess` сайта разрешены PHP и POST только для `/new/mail/`,
+  а в CSP добавлены `https://smartcaptcha.yandexcloud.net` и
+  `https://smartcaptcha.cloud.yandex.ru` (script/connect/frame/img).
+
+### Корневой `.htaccess`
+
+В `/public_html/.htaccess` сайта добавлены исключения только для `/new/mail/`:
+
+```apache
+RewriteCond %{REQUEST_URI} !^/new/mail/
+RewriteRule "\.(?:php[0-9]?|phtml|pht|phar|cgi)(?:/|$)" - [F,L,NC]
+
+RewriteCond %{REQUEST_URI} !^/new/mail/
+RewriteCond %{REQUEST_METHOD} !^(GET|HEAD|OPTIONS)$ [NC]
+RewriteRule ^ - [F,L]
+```
+
+В CSP добавлены `https://smartcaptcha.yandexcloud.net` и
+`https://smartcaptcha.cloud.yandex.ru` в `script-src`, `connect-src`,
+`frame-src` и `img-src`.
 
 ## Отправка
 

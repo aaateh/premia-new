@@ -12,13 +12,17 @@
  */
 declare(strict_types=1);
 
+use PHPMailer\PHPMailer\PHPMailer;
+
 // Ответ всегда JSON: предупреждения не должны попадать в тело ответа.
 ini_set('display_errors', '0');
 error_reporting(E_ALL & ~E_DEPRECATED);
 
 $config = require __DIR__ . '/config.php';
 require_once __DIR__ . '/mail_template.php';
-require_once __DIR__ . '/PHPMailerAutoload.php';
+require_once __DIR__ . '/src/Exception.php';
+require_once __DIR__ . '/src/PHPMailer.php';
+require_once __DIR__ . '/src/SMTP.php';
 
 header('X-Content-Type-Options: nosniff');
 
@@ -161,7 +165,7 @@ if ($config['smtp_password'] === '') {
     pf_respond(['status' => 'ERROR', 'message' => 'Отправка не настроена'], 500);
 }
 
-$mail = new PHPMailer();
+$mail = new PHPMailer(true);
 $mail->CharSet = 'UTF-8';
 $mail->Timeout = 15;
 $mail->isSMTP();
@@ -181,7 +185,7 @@ $mail->msgHTML($message);
 
 try {
     $sent = $mail->send();
-} catch (Exception $error) {
+} catch (\Exception $error) {
     $sent = false;
     error_log('partners-form: PHPMailer exception: ' . $error->getMessage());
 }
