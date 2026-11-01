@@ -479,13 +479,16 @@ body.menu-open .header {
 .card h3 { margin-top: 2px; }
 
 /* «Участники»: без серого контура, картинка снизу во всю ширину текста */
+#participants .card {
+  padding-bottom: 16px;
+}
+
 #participants .card::before { display: none; }
 
 #participants .card__figure {
   width: 100%;
   height: auto;
   margin-top: auto;            /* картинки прижаты к низу и стоят на одной линии */
-  padding-top: 10px;
   mix-blend-mode: multiply;    /* белый фон иллюстрации растворяется в бумаге */
 }
 
