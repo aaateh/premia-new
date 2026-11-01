@@ -156,6 +156,32 @@
     update();
   })();
 
+  // огонь в заголовке «Сильная работа…» — только когда он в кадре и вкладка активна
+  (function fireHeading() {
+    var heading = document.querySelector('#mission h2');
+    if (!heading) return;
+
+    var reduced = window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var visible = false;
+
+    function apply() {
+      heading.classList.toggle('is-burning', visible && !document.hidden && !reduced);
+    }
+
+    if (window.IntersectionObserver) {
+      new IntersectionObserver(function (entries) {
+        visible = entries.some(function (entry) { return entry.isIntersecting; });
+        apply();
+      }, { rootMargin: '160px' }).observe(heading);
+    } else {
+      visible = true;
+      apply();
+    }
+
+    document.addEventListener('visibilitychange', apply);
+  })();
+
   var burger = document.getElementById('burger');
   var nav = document.getElementById('nav');
   if (!burger || !nav) return;
