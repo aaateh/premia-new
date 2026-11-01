@@ -26,23 +26,23 @@ return [
     'desktop' => [
         'full' => [
             'label'  => 'Полное качество, 4K',
-            'video'  => 'assets/fire-desktop-4k-loop.mp4',
-            'poster' => 'assets/fire-desktop-poster-4k.jpg',
+            'video'  => '../media/fire/fire-desktop-4k-loop.mp4',
+            'poster' => '../media/fire/fire-desktop-poster-4k.jpg',
             'width'  => 4096,
             'height' => 2160,
         ],
         '1440' => [
             'label'  => 'Облегчённый, 1440',
-            'video'  => 'assets/fire-desktop-1440-loop.mp4',
-            'poster' => 'assets/fire-desktop-poster-1440.jpg',
+            'video'  => '../media/fire/fire-desktop-1440-loop.mp4',
+            'poster' => '../media/fire/fire-desktop-poster-1440.jpg',
             'width'  => 1440,
             'height' => 760,
         ],
     ],
 
     'mobile' => [
-        'video'  => 'assets/fire-mobile-540-loop.mp4',
-        'poster' => 'assets/fire-mobile-poster-540.jpg',
+        'video'  => '../media/fire/fire-mobile-540-loop.mp4',
+        'poster' => '../media/fire/fire-mobile-poster-540.jpg',
         'width'  => 540,
         'height' => 1080,
     ],

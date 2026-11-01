@@ -88,6 +88,10 @@
 }
 
 .fire-toggle {
+    --fire-ink: #f5f0eb;
+    --fire-accent: #f56624;
+    --fire-line: rgba(245, 240, 235, 0.4);
+
     position: fixed;
     right: clamp(16px, 2.4vw, 32px);
     bottom: clamp(16px, 2.4vw, 32px);

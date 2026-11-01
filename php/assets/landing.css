@@ -40,6 +40,14 @@
     margin: 0 0 28px;
 }
 
+/* На планшете кнопки занимают всю ширину над датами. */
+@media (max-width: 900px) {
+    .hero__aside .hero__cta {
+        grid-column: 1 / -1;
+        margin-bottom: 0;
+    }
+}
+
 /* Одинаковое затемнение под обеими кнопками первого экрана. */
 .hero__cta .btn,
 .hero__cta .btn--ghost {
@@ -84,7 +92,8 @@
         background-clip: text;
         -webkit-text-fill-color: transparent;
         color: transparent;
-        animation: slogan-glint 12s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+        /* Цикл 8,4 с = 5,4 с на проход блика + 3 с паузы (64,286 %). */
+        animation: slogan-glint 8.4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
     }
 }
 
@@ -95,7 +104,7 @@
         background-position: 100% 0, 0 0;
     }
 
-    45%,
+    64.286%,
     100% {
         background-position: 0% 0, 0 0;
     }

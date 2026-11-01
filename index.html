@@ -13,10 +13,34 @@
   <link rel="preload" href="fonts/Involve-Regular.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="fonts/dela-gothic-one-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="css/tokens.css?v=10" />
-  <link rel="stylesheet" href="css/style.css?v=64" />
+  <link rel="stylesheet" href="css/style.css?v=65" />
+  <link rel="stylesheet" href="css/fire.css?v=1" />
   <link rel="stylesheet" href="css/partners-form.css?v=1" />
 </head>
 <body>
+
+<div class="fire-scene fire-scene--dim"
+     data-fire-scene
+     data-wait="full"
+     data-rate="0.7"
+     aria-hidden="true">
+  <div class="fire-media">
+    <video class="fire-video"
+           muted
+           loop
+           playsinline
+           webkit-playsinline
+           preload="auto"
+           disablepictureinpicture
+           disableremoteplayback
+           data-src-desktop="media/fire/fire-desktop-4k-loop.mp4"
+           data-src-mobile="media/fire/fire-mobile-540-loop.mp4"></video>
+  </div>
+
+  <canvas class="fire-sparks" aria-hidden="true"></canvas>
+</div>
+
+<div class="site">
 
 <header class="header">
   <div class="wrap header__inner">
@@ -53,7 +77,7 @@
         <span class="sr-only">Суровая премия</span>
       </h1>
 
-      <p class="hero__sub">Получи свой Оскар<br />в маркетинге</p>
+      <p class="hero__sub" data-slogan><span data-slogan-line>Получи свой Оскар</span><br />в маркетинге</p>
 
       <div class="hero__bottom">
         <div class="hero__main">
@@ -61,13 +85,14 @@
             <p class="lead">Профессиональная премия в сфере интернет-маркетинга и SMM от команды Сурового Питерского форума.</p>
             <p class="lead">За каждым сильным кейсом стоят люди. Представьте свой проект экспертному жюри и поборитесь за профессиональное признание результатов вашей работы.</p>
           </div>
+        </div>
+
+        <aside class="hero__aside">
           <div class="hero__cta">
             <a class="btn" href="#pricing">Подать заявку</a>
             <a class="btn btn--ghost" href="#nominations">Смотреть номинации</a>
           </div>
-        </div>
 
-        <aside class="hero__aside">
           <div class="dates-line">
             <div class="dates-line__label">Приём заявок</div>
             <div class="dates-line__value">24 октября 2026 — 17 марта 2027</div>
@@ -79,6 +104,16 @@
         </aside>
       </div>
     </div>
+
+    <button class="fire-toggle" type="button" data-fire-toggle data-state="paused" hidden>
+      <span class="sr-only" data-fire-label>Пауза фона</span>
+      <svg class="fire-icon fire-icon--pause" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M9 6v12M15 6v12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      <svg class="fire-icon fire-icon--play" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M9 6.5 18 12l-9 5.5z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+      </svg>
+    </button>
   </section>
 
   <!-- 3. О ПРЕМИИ -->
@@ -915,8 +950,12 @@
   </div>
 </div>
 
+</div><!-- /.site -->
+
 <script src="js/star-border.js?v=2"></script>
 <script src="js/app.js?v=7"></script>
 <script src="js/partners-form.js?v=1"></script>
+<script src="js/slogan.js?v=1" defer></script>
+<script src="js/fire.js?v=1" defer></script>
 </body>
 </html>

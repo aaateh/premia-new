@@ -142,13 +142,14 @@ header('X-Content-Type-Options: nosniff');
                             <p class="lead">Профессиональная премия в сфере интернет-маркетинга и SMM от команды Сурового Питерского форума.</p>
                             <p class="lead">За каждым сильным кейсом стоят люди. Представьте свой проект экспертному жюри и поборитесь за профессиональное признание результатов вашей работы.</p>
                         </div>
+                    </div>
+
+                    <aside class="hero__aside">
                         <div class="hero__cta">
                             <a class="btn" href="#pricing">Подать заявку</a>
                             <a class="btn btn--ghost" href="#nominations">Смотреть номинации</a>
                         </div>
-                    </div>
 
-                    <aside class="hero__aside">
                         <div class="dates-line">
                             <div class="dates-line__label">Приём заявок</div>
                             <div class="dates-line__value">24 октября 2026 — 17 марта 2027</div>

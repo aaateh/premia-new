@@ -44,9 +44,12 @@ assets/slogan.js       +7 % слогана на телефоне, если ст�
 assets/bare.css        полноэкранная подложка полигона
 assets/background.js   проверка устройства, полная загрузка, выбор ролика,
                        пауза во вкладке, canvas-искры
-assets/*.mp4, *.jpg    сам фон: бесшовные циклы и постеры
 tools/loop.sh          сборка бесшовной петли из исходного ролика
 ```
+
+Сами ролики и постеры лежат в корне проекта — `media/fire/*.mp4, *.jpg`:
+их использует и полигон, и главная страница `/new/`. На главной работают
+`css/fire.css`, `js/fire.js` и `js/slogan.js`.
 
 ## Вес фона
 
@@ -79,8 +82,8 @@ tools/loop.sh          сборка бесшовной петли из исхо�
   размер.
 - По слогану слева направо пробегает красный блик: белый слой держит
   цвет текста, поверх идёт полоса огненного отблеска (background-clip:
-  text). Полоса широкая и идёт слева направо; цикл 12 с, сам пробег —
-  5,4 с. При reduced-motion анимация выключена.
+  text). Полоса широкая и идёт слева направо; цикл 8,4 с: 5,4 с на
+  проход и 3 с паузы. При reduced-motion анимация выключена.
 
 ## Как ведёт себя огонь
 
@@ -126,13 +129,13 @@ tools/loop.sh          сборка бесшовной петли из исхо�
 
 ```bash
 # полное 4K: хвост 1,25 с перетекает в начало
-php/tools/loop.sh fire-tall-4k-v3.mp4 fire-desktop-4k-loop.mp4 1.25 18
+php/tools/loop.sh fire-tall-4k-v3.mp4 media/fire/fire-desktop-4k-loop.mp4 1.25 18
 
 # облегчённый: тот же цикл, ширина 1440
-php/tools/loop.sh fire-tall-4k-v3.mp4 fire-desktop-1440-loop.mp4 1.25 26 1440
+php/tools/loop.sh fire-tall-4k-v3.mp4 media/fire/fire-desktop-1440-loop.mp4 1.25 26 1440
 
 # телефон: 0,5 с на цикл
-php/tools/loop.sh fire-mobile-portrait-v2.mp4 fire-mobile-540-loop.mp4 0.5 23
+php/tools/loop.sh fire-mobile-portrait-v2.mp4 media/fire/fire-mobile-540-loop.mp4 0.5 23
 ```
 
 Пропорции 4096×2160 сохранены, поэтому при `object-fit: cover` кадр

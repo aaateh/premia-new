@@ -13,9 +13,13 @@ index.html
 jury.html
 css/tokens.css
 css/style.css
+css/fire.css            (сцена с огнём на первых двух экранах)
 css/partners-form.css     (стили формы «Стать партнёром»)
 js/                       (если менялся)
+js/fire.js                (огонь, искры, пауза, скорость)
+js/slogan.js              (слоган на телефоне +7 %)
 js/partners-form.js       (логика формы)
+media/fire/               (ролики огня: 4K 26 МБ, 1440 3,4 МБ, телефон 0,4 МБ)
 mail/                     (обработчик формы, PHPMailer, config.local.php)
 img/                      (rumantsev.jpg, topor.png, characters/*.webp, illustrations/*.webp)
 logo.svg                  (если менялся)
@@ -24,6 +28,9 @@ fonts/                    (только 5 подключённых файлов 
 
 Шрифты и `js/` обычно уже лежат на сервере — перед заливкой сверить версии
 `?v=` в HTML.
+
+Огонь грузится через `fetch` и играет из `blob:`, поэтому в CSP сайта для
+`/new/` должны быть разрешены `media-src 'self' blob:` и `connect-src 'self'`.
 
 Форма работает на **PHP 8.5** (выбран в настройках сайта Beget). В корневом
 `.htaccess` сайта должны быть разрешены PHP и POST для `/new/mail/`, а в CSP
