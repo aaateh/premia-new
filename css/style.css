@@ -549,7 +549,7 @@ body.menu-open .header {
 
 /* «Сильная работа…» — огонь внутри букв; анимация включается только в кадре */
 @supports ((background-clip: text) or (-webkit-background-clip: text)) {
-  .mission h2 {
+  #mission h2 {
     background-color: var(--ink);
     background-image: url("../img/fire-text.webp");
     background-repeat: repeat;
@@ -563,7 +563,7 @@ body.menu-open .header {
     animation-play-state: paused;
   }
 
-  .mission h2.is-burning { animation-play-state: running; }
+  #mission h2.is-burning { animation-play-state: running; }
 }
 
 @keyframes fire-text {
@@ -572,11 +572,11 @@ body.menu-open .header {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mission h2 { animation: none; }
+  #mission h2 { animation: none; }
 }
 
 @media (forced-colors: active) {
-  .mission h2 {
+  #mission h2 {
     background: none;
     -webkit-text-fill-color: CanvasText;
     color: CanvasText;
@@ -910,7 +910,7 @@ body.menu-open .header {
 }
 
 .timeline__date {
-  color: var(--scene-ink);
+  color: #FFFFFF;
   font-family: var(--font-ui);
   font-size: 20px;
   line-height: 1.35;
@@ -918,7 +918,7 @@ body.menu-open .header {
 
 .timeline__text {
   max-width: 220px;
-  color: var(--scene-muted);
+  color: #FFFFFF;
   font-size: 16px;
   line-height: 1.5;
 }
@@ -995,7 +995,8 @@ body.menu-open .header {
 .awards-note {
   max-width: 720px;
   margin-top: 28px;
-  color: var(--scene-muted);
+  /* подпись-уточнение под блоком остаётся приглушённой */
+  color: var(--scene-dim);
   font-size: 16px;
 }
 

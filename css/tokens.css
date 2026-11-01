@@ -46,7 +46,7 @@
   /* --- тёмная сцена (по умолчанию) --- */
   --ground: #080607;
   --scene-ink: #F5F0EB;
-  --scene-muted: #F5F0EB;
+  --scene-muted: #FFFFFF;
   --scene-dim: #F5F0EB;
   --control-surface: #15111280;
   --action-border: #C8C2BC;
