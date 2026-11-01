@@ -68,6 +68,12 @@
     display: none;
 }
 
+/* Ниже первых двух экранов сцена не рисуется: ролик при этом
+   может играть только для огня в заголовке «Сильная работа…». */
+.fire-scene.is-offscreen {
+    visibility: hidden;
+}
+
 .fire-sparks {
     position: absolute;
     inset: 0;

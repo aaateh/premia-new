@@ -34,6 +34,8 @@
     var loadToken = 0;
     var objectUrl = '';
     var sparks = null;
+    var sceneVisible = true;
+    var burnVisible = false;
 
     video.muted = true;
     video.loop = true;
@@ -126,6 +128,12 @@
 
     var sparkCanvas = scene.querySelector('.fire-sparks');
     sparks = sparkCanvas ? createSparks(sparkCanvas) : null;
+
+    createBurn(function (visible) {
+        burnVisible = visible;
+        sync();
+    });
+    observeScene();
 
     function sourceFor() {
         return mobileQuery.matches ? video.getAttribute('data-src-mobile') : video.getAttribute('data-src-desktop');
@@ -251,7 +259,7 @@
         }
         setStatus('огонь загружен — показываем');
         if (sparks) {
-            sparks.setActive(wantsMotion && !document.hidden);
+            sparks.setActive(wantsMotion && !document.hidden && sceneVisible);
         }
         updateUi();
     }
@@ -280,8 +288,15 @@
         }
     }
 
+    function shouldPlay() {
+        return ready && !blocked && wantsMotion && !document.hidden && (sceneVisible || burnVisible);
+    }
+
     function play() {
         if (!ready || blocked || !wantsMotion || document.hidden) {
+            return;
+        }
+        if (!sceneVisible && !burnVisible) {
             return;
         }
 
@@ -314,10 +329,10 @@
         }
 
         if (sparks) {
-            sparks.setActive(wantsMotion && !document.hidden);
+            sparks.setActive(wantsMotion && !document.hidden && sceneVisible);
         }
 
-        if (wantsMotion && !document.hidden) {
+        if (shouldPlay()) {
             play();
         } else {
             pause();
@@ -447,6 +462,285 @@
     updateProgress();
     updateUi();
     sync();
+
+    /* Следим, виден ли первый экран: ниже него ролик и искры останавливаем. */
+    function observeScene() {
+        if (!window.IntersectionObserver) {
+            return;
+        }
+
+        var sections = [document.querySelector('.hero'), document.querySelector('#about')];
+        sections = sections.filter(function (item) { return item; });
+        if (!sections.length) {
+            return;
+        }
+
+        var states = [];
+        var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                var index = sections.indexOf(entry.target);
+                if (index >= 0) {
+                    states[index] = entry.isIntersecting;
+                }
+            });
+
+            var next = states.some(function (value) { return value; });
+            if (next === sceneVisible) {
+                return;
+            }
+
+            sceneVisible = next;
+            scene.classList.toggle('is-offscreen', !sceneVisible);
+            sync();
+        }, { rootMargin: '240px 0px' });
+
+        sections.forEach(function (item) {
+            observer.observe(item);
+        });
+    }
+
+    /* Заголовок «Сильная работа…»: тот же ролик просвечивает через буквы.
+       Маска — контуры текста, canvas рисует кадры, только пока заголовок в кадре. */
+    function createBurn(onChange) {
+        var title = document.querySelector('[data-burn-title]');
+        if (!title) {
+            return null;
+        }
+
+        var canvas = title.querySelector('.mission__burn');
+        var textEl = title.querySelector('.mission__title-text');
+        if (!canvas || !textEl) {
+            return null;
+        }
+
+        var context = canvas.getContext('2d');
+        if (!context) {
+            return null;
+        }
+
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+        var mask = '';
+        var visible = false;
+        var active = false;
+        var raf = 0;
+        var last = 0;
+        var resizeTimer = 0;
+
+        function buildMask() {
+            var rect = title.getBoundingClientRect();
+            var width = Math.round(rect.width);
+            var height = Math.round(rect.height);
+            var node = textEl.firstChild;
+            if (!width || !height || !node || node.nodeType !== 3) {
+                return false;
+            }
+
+            var style = window.getComputedStyle(title);
+            var lineHeight = parseFloat(style.lineHeight);
+            if (!isFinite(lineHeight) || lineHeight <= 0) {
+                lineHeight = parseFloat(style.fontSize) * 1.2;
+            }
+
+            var probe = title.querySelector('.mission__baseline');
+            if (!probe) {
+                return false;
+            }
+            var baseline = probe.getBoundingClientRect().top - rect.top;
+
+            var maskCanvas = document.createElement('canvas');
+            maskCanvas.width = Math.round(width * dpr);
+            maskCanvas.height = Math.round(height * dpr);
+            var maskContext = maskCanvas.getContext('2d');
+            if (!maskContext) {
+                return false;
+            }
+
+            maskContext.scale(dpr, dpr);
+            maskContext.fillStyle = '#fff';
+            maskContext.textBaseline = 'alphabetic';
+            maskContext.font = style.fontStyle + ' ' + style.fontWeight + ' ' +
+                style.fontSize + ' ' + style.fontFamily;
+            if ('letterSpacing' in maskContext) {
+                maskContext.letterSpacing = style.letterSpacing;
+            }
+
+            var text = node.nodeValue;
+            var range = document.createRange();
+            var chars = [];
+            var index;
+
+            for (index = 0; index < text.length; index += 1) {
+                if (!/\S/.test(text.charAt(index))) {
+                    continue;
+                }
+                range.setStart(node, index);
+                range.setEnd(node, index + 1);
+                var box = range.getBoundingClientRect();
+                if (box.width < 0.5 || box.height < 0.5) {
+                    continue;
+                }
+                chars.push({ index: index, top: box.top, left: box.left });
+            }
+
+            if (!chars.length) {
+                return false;
+            }
+
+            var firstTop = chars[0].top;
+            var lines = {};
+            for (index = 0; index < chars.length; index += 1) {
+                var line = Math.round((chars[index].top - firstTop) / lineHeight);
+                if (!lines[line]) {
+                    lines[line] = [];
+                }
+                lines[line].push(chars[index]);
+            }
+
+            Object.keys(lines).forEach(function (key) {
+                var items = lines[key];
+                var from = items[0].index;
+                var to = items[items.length - 1].index;
+                var lineText = text.slice(from, to + 1);
+                var x = items[0].left - rect.left;
+                var y = baseline + Number(key) * lineHeight;
+                maskContext.fillText(lineText.toUpperCase(), x, y);
+            });
+
+            mask = maskCanvas.toDataURL('image/png');
+            canvas.style.webkitMaskImage = 'url("' + mask + '")';
+            canvas.style.maskImage = 'url("' + mask + '")';
+
+            return true;
+        }
+
+        function sizeCanvas() {
+            var width = Math.round(title.clientWidth * dpr);
+            var height = Math.round(title.clientHeight * dpr);
+            if (width && height && (canvas.width !== width || canvas.height !== height)) {
+                canvas.width = width;
+                canvas.height = height;
+            }
+        }
+
+        function draw() {
+            if (!mask) {
+                return;
+            }
+
+            var width = title.clientWidth;
+            var height = title.clientHeight;
+            var videoWidth = video.videoWidth;
+            var videoHeight = video.videoHeight;
+            if (!width || !height || !videoWidth || !videoHeight || video.readyState < 2) {
+                return;
+            }
+            if (video.paused) {
+                return;
+            }
+
+            sizeCanvas();
+            var scale = Math.max(width / videoWidth, height / videoHeight);
+            var sourceWidth = width / scale;
+            var sourceHeight = height / scale;
+            context.drawImage(
+                video,
+                (videoWidth - sourceWidth) / 2,
+                videoHeight - sourceHeight,
+                sourceWidth,
+                sourceHeight,
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
+            if (!active) {
+                active = true;
+                title.classList.add('is-video-burn');
+            }
+        }
+
+        function tick(now) {
+            raf = 0;
+            if (!visible || document.hidden) {
+                return;
+            }
+            if (now - last >= 33) {
+                last = now;
+                draw();
+            }
+            raf = window.requestAnimationFrame(tick);
+        }
+
+        function schedule() {
+            if (!raf) {
+                raf = window.requestAnimationFrame(tick);
+            }
+        }
+
+        function setVisible(next) {
+            if (next === visible) {
+                return;
+            }
+
+            visible = next;
+            if (visible) {
+                if (!mask) {
+                    if (document.fonts && document.fonts.ready) {
+                        document.fonts.ready.then(function () {
+                            buildMask();
+                            schedule();
+                        });
+                    } else {
+                        buildMask();
+                    }
+                }
+                schedule();
+            } else if (raf) {
+                window.cancelAnimationFrame(raf);
+                raf = 0;
+            }
+
+            if (onChange) {
+                onChange(visible);
+            }
+        }
+
+        if (window.IntersectionObserver) {
+            new IntersectionObserver(function (entries) {
+                setVisible(entries.some(function (entry) { return entry.isIntersecting; }));
+            }, { rootMargin: '180px 0px' }).observe(title);
+        } else {
+            setVisible(true);
+        }
+
+        window.addEventListener('resize', function () {
+            if (resizeTimer) {
+                window.clearTimeout(resizeTimer);
+            }
+            resizeTimer = window.setTimeout(function () {
+                if (visible) {
+                    buildMask();
+                    draw();
+                } else {
+                    mask = '';
+                }
+            }, 180);
+        });
+
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) {
+                if (raf) {
+                    window.cancelAnimationFrame(raf);
+                    raf = 0;
+                }
+            } else if (visible) {
+                schedule();
+            }
+        });
+
+        return true;
+    }
 
     /* Искры: те же параметры, что у оригинала, — 70 частиц,
        подъём снизу вверх, затухание к краям траектории. */
