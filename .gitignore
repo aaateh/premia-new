@@ -2,4 +2,4 @@
 .DS_Store
 backups/
 .opencode/tmp/
-partners-form/php/config.local.php
+mail/config.local.php

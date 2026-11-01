@@ -13,10 +13,13 @@ index.html
 jury.html
 css/tokens.css
 css/style.css
-js/            (если менялся)
-img/           (rumantsev.jpg, topor.png, characters/*.webp, illustrations/*.webp)
-logo.svg       (если менялся)
-fonts/         (только 5 подключённых файлов Dela / Involve / Golos)
+css/partners-form.css     (стили формы «Стать партнёром»)
+js/                       (если менялся)
+js/partners-form.js       (логика формы)
+mail/                     (обработчик формы, PHPMailer, config.local.php)
+img/                      (rumantsev.jpg, topor.png, characters/*.webp, illustrations/*.webp)
+logo.svg                  (если менялся)
+fonts/                    (только 5 подключённых файлов Dela / Involve / Golos)
 ```
 
 Шрифты и `js/` обычно уже лежат на сервере — перед заливкой сверить версии
@@ -46,6 +49,9 @@ ftp_connect({ name: "ma", site: "marketingawards" })
 
 Пароли в репозиторий не коммитить. Если нужен локальный файл с доступом —
 держать рядом `.env.local` (он в `.gitignore`), в этой заметке — только имя профиля.
+
+Секреты формы (`mail/config.local.php`: пароль SMTP и серверный ключ SmartCaptcha)
+тоже не коммитятся, но заливаются на сервер вместе с папкой `mail/`.
 
 ## Проверка после заливки
 

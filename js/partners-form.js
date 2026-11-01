@@ -526,22 +526,6 @@
   }
 
 
-  function initPreviewStars() {
-    if (!window.StarBorder) return;
-
-    for (var i = 0; i < triggers.length; i++) {
-      window.StarBorder.init(triggers[i], {
-        radius: 4,
-        thickness: 1,
-        duration: 4,
-        glow: .6,
-        hover: 'lap',
-        theme: 'light'
-      });
-    }
-  }
-
-  initPreviewStars();
   removeInternalStar();
 
   /* ---------- открытие по ссылке ---------- */
