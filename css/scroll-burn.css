@@ -1,0 +1,55 @@
+/* ==========================================================================
+   Scroll Burn — прожиг между секциями.
+   Ядро эффекта: canvas-кромка и два слоя, двигаемых только transform.
+   ========================================================================== */
+
+/* секция-хозяин прожига */
+.burn-host { position: relative; }
+
+/* у следующей секции гасим 1px-шов на стыке */
+.burn-next { border-top-color: transparent; }
+
+/* слой внутри уходящей секции */
+.burn {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* для высокой секции: слой прижат к нижним 100svh */
+.burn--viewport {
+  inset: auto 0 0;
+  height: 100svh;
+}
+
+.burn__solid {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: translate3d(0, 0, 0) scaleY(0);
+  transform-origin: 50% 100%;
+  will-change: transform;
+}
+
+.burn__band {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+
+.burn__band-inner {
+  position: absolute;
+  inset: 0;
+}
+
+.burn__band-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
