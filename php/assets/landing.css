@@ -17,6 +17,29 @@
     position: relative;
 }
 
+/* Кнопки переехали в правую колонку — над датами. Колонка чуть шире,
+   чтобы обе кнопки стояли в один ряд. */
+@media (min-width: 901px) {
+    .hero__bottom {
+        grid-template-columns: minmax(0, 1fr) minmax(520px, 1.05fr);
+    }
+
+    /* Обе кнопки в один ряд: делят ширину поровну, min-width базовой
+       кнопки (244px) не даёт им влезть в колонку. */
+    .hero__aside .hero__cta {
+        flex-wrap: nowrap;
+    }
+
+    .hero__aside .hero__cta .btn {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+}
+
+.hero__aside .hero__cta {
+    margin: 0 0 28px;
+}
+
 /* Одинаковое затемнение под обеими кнопками первого экрана. */
 .hero__cta .btn,
 .hero__cta .btn--ghost {
