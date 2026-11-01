@@ -71,6 +71,9 @@ a:hover { text-decoration: none; }
 .muted { color: var(--scene-muted); }
 .small { font-size: 14px; line-height: 1.55; }
 
+/* принудительный перенос только в узкой раскладке */
+.br-mobile { display: none; }
+
 .wrap {
   width: 100%;
   max-width: calc(var(--page-col) + var(--edge) * 2);
@@ -974,12 +977,31 @@ body.menu-open .header {
 .awards { position: relative; }
 
 .awards-line {
-  height: 130px;
-  margin-bottom: 8px;
+  margin-bottom: 22px;
   pointer-events: none;
 }
 
-.awards-line svg { display: block; width: 100%; height: 100%; }
+.awards-line svg { display: block; width: 100%; height: auto; }
+
+/* метки-точки на контуре: по одной над каждой карточкой */
+.awards-mark {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.awards-mark--pulse {
+  animation: awards-pulse 7.2s ease-in-out infinite;
+}
+
+.awards-mark--1 { animation-delay: .3s; }
+.awards-mark--2 { animation-delay: 1.9s; }
+.awards-mark--3 { animation-delay: 3.5s; }
+
+@keyframes awards-pulse {
+  0%, 100% { transform: scale(1); }
+  9% { transform: scale(2); }
+  26% { transform: scale(1); }
+}
 
 .awards-grid {
   position: relative;
@@ -1058,6 +1080,7 @@ body.menu-open .header {
 
 @media (prefers-reduced-motion: reduce) {
   .axe img { transition: none; }
+  .awards-mark--pulse { animation: none; }
 }
 
 @media (max-width: 1399px) {
@@ -1379,6 +1402,15 @@ body.menu-open .header {
 
   .founders { margin: 0 -10px; }
   .founder { width: calc(100% - 20px); margin: 10px 10px 34px; }
+
+  /* топор — у правого края, частично за экраном; в потоке, чтобы не лезть в текст */
+  .section--principles { overflow: hidden; }
+  .axe {
+    display: block;
+    position: static;
+    width: min(52vw, 220px);
+    margin: 28px -44px 0 auto;
+  }
 }
 
 @media (max-width: 980px) {
@@ -1443,11 +1475,14 @@ body.menu-open .header {
     grid-column: 1;
     grid-row: 3;
     align-self: start;
-    justify-self: start;
+    justify-self: center;
     width: min(100%, 168px);
     margin-top: 8px;
     margin-right: 0;
   }
+
+  /* переносы в заголовках «Зачем участвовать» */
+  .br-mobile { display: inline; }
 
   .nom-list { grid-template-columns: 1fr; }
 

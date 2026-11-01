@@ -13,7 +13,7 @@
   <link rel="preload" href="fonts/Involve-Regular.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="fonts/dela-gothic-one-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="css/tokens.css?v=10" />
-  <link rel="stylesheet" href="css/style.css?v=63" />
+  <link rel="stylesheet" href="css/style.css?v=64" />
 </head>
 <body>
 
@@ -182,12 +182,12 @@
           <img class="card__figure" src="img/illustrations/1-briefcase.webp?v=3" alt="" width="560" height="560" loading="lazy" decoding="async" />
         </article>
         <article class="card">
-          <h3>Побороться за профессиональное признание</h3>
+          <h3>Побороться<br class="br-mobile" /> за профессиональное признание</h3>
           <p class="muted">Ваш кейс рассмотрит экспертное жюри. Прохождение в шорт-лист или победа станут подтверждением того, что ваша работа получила признание по итогам конкурсной оценки.</p>
           <img class="card__figure" src="img/illustrations/2-checklist.webp?v=3" alt="" width="560" height="560" loading="lazy" decoding="async" />
         </article>
         <article class="card">
-          <h3>Усилить портфолио и репутацию</h3>
+          <h3>Усилить портфолио<br class="br-mobile" /> и репутацию</h3>
           <p class="muted">Статус финалиста или победителя можно использовать в портфолио, презентациях и коммерческих предложениях. Это дополнительный аргумент, когда вы представляете себя работодателю или обсуждаете сотрудничество с заказчиком.</p>
           <img class="card__figure" src="img/illustrations/4-star-trophy.webp?v=3" alt="" width="560" height="560" loading="lazy" decoding="async" />
         </article>
@@ -501,10 +501,13 @@
 
       <div class="awards">
         <div class="awards-line" aria-hidden="true">
-          <svg viewBox="0 0 1040 130" preserveAspectRatio="none" fill="none">
-            <path d="M0 112 C 160 104 260 78 360 88 C 470 100 520 58 610 50 C 720 40 760 18 860 14 C 930 11 990 6 1040 2" stroke="var(--rule-strong)" stroke-width="1" opacity=".55" />
-            <path d="M0 120 C 170 112 270 88 370 98 C 480 108 540 66 630 58 C 730 50 780 26 880 22 C 940 19 1000 12 1040 8" stroke="var(--rule-strong)" stroke-width="1" />
-            <path d="M0 120 C 170 112 270 88 370 98 C 480 108 540 66 630 58 C 730 50 780 26 880 22 C 940 19 1000 12 1040 8" stroke="var(--brand-accent)" stroke-width="4" stroke-linecap="round" stroke-dasharray="0.1 34" opacity=".6" />
+          <svg viewBox="0 0 1040 96" fill="none" focusable="false">
+            <path class="awards-ridge" d="M10 84 L167 66 L260 74 L360 56 L440 62 L520 44 L620 50 L700 36 L780 44 L873 14 L960 38 L1030 30" stroke="var(--brand-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="miter" opacity=".85" />
+            <circle class="awards-mark" cx="10" cy="84" r="3.5" fill="var(--brand-accent)" />
+            <circle class="awards-mark awards-mark--pulse awards-mark--1" cx="167" cy="66" r="5" fill="var(--brand-accent)" />
+            <circle class="awards-mark awards-mark--pulse awards-mark--2" cx="520" cy="44" r="5" fill="var(--brand-accent)" />
+            <circle class="awards-mark awards-mark--pulse awards-mark--3" cx="873" cy="14" r="5" fill="var(--brand-accent)" />
+            <circle class="awards-mark" cx="1030" cy="30" r="3.5" fill="var(--brand-accent)" />
           </svg>
         </div>
 
