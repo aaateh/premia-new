@@ -265,16 +265,9 @@ body.menu-open .header {
 
 .hero { padding: clamp(56px, 7vw, 104px) 0 clamp(56px, 7vw, 94px); }
 
-.hero__top {
-  display: grid;
-  grid-template-columns: minmax(0, 1.18fr) minmax(280px, .82fr);
-  align-items: start;
-  gap: clamp(36px, 5vw, 72px);
-}
-
 .hero__brand {
-  width: min(100%, 460px);
-  margin: 0;
+  width: min(100%, 690px);
+  margin: 0 0 28px;
 }
 
 .hero__logo {
@@ -283,14 +276,22 @@ body.menu-open .header {
 }
 
 .hero__sub {
-  max-width: none;
-  margin: clamp(36px, 4vw, 58px) 0 24px;
+  margin: 0 0 clamp(32px, 4vw, 56px);
   color: var(--scene-ink);
-  font-family: var(--font-base);
-  font-size: var(--fs-h1);
-  font-weight: 700;
-  letter-spacing: -.015em;
-  line-height: 1.05;
+  font-family: var(--slogan-font);
+  font-size: clamp(18px, 5.9vw, 50.8px);
+  font-weight: 400;
+  letter-spacing: -.012em;
+  line-height: 1.06;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.hero__bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1.18fr) minmax(280px, .82fr);
+  align-items: end;
+  gap: clamp(36px, 5vw, 72px);
 }
 
 .hero__text { max-width: none; }
@@ -493,6 +494,11 @@ body.menu-open .header {
   mix-blend-mode: multiply;    /* белый фон иллюстрации растворяется в бумаге */
 }
 
+#participants .card:nth-child(1) .card__figure,
+#participants .card:nth-child(2) .card__figure { width: 90%; }
+
+#participants .card:nth-child(3) .card__figure { width: 87%; }
+
 /* «Участие»: белая карточка без контура, картинка справа, текст инвертирован */
 #benefits .card {
   --card-surface: #FFFFFF;
@@ -501,7 +507,7 @@ body.menu-open .header {
   grid-template-columns: minmax(0, 1fr) clamp(112px, 13.3vw, 168px);
   grid-template-rows: auto 1fr;
   align-items: start;
-  column-gap: clamp(24px, 4vw, 56px);
+  column-gap: clamp(20px, 3vw, 40px);
   color: var(--ink);
   /* обрезаем картинку по форме карточки, чтобы она не выходила за срезанный угол */
   clip-path: polygon(
@@ -535,7 +541,6 @@ body.menu-open .header {
   justify-self: end;
   width: 100%;
   height: auto;
-  margin-right: -28px;   /* к правому краю карточки, лишнее срежет clip-path */
 }
 
 /* ---------- миссия и принципы ---------- */
@@ -1383,7 +1388,7 @@ body.menu-open .header {
 }
 
 @media (max-width: 900px) {
-  .hero__top { grid-template-columns: 1fr; gap: 36px; }
+  .hero__bottom { grid-template-columns: 1fr; gap: 36px; }
   .hero__aside {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
