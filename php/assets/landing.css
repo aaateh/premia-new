@@ -1,0 +1,86 @@
+/* Тестовая страница: шапка и первые два тёмных экрана из /new/ поверх огня. */
+
+.site {
+    position: relative;
+    z-index: 1;
+    min-height: 100svh;
+}
+
+/* Шапка из /new/ плотная; верх сцены и так чёрный, поэтому стыка не видно. */
+.header {
+    background: rgba(8, 6, 7, 0.94);
+}
+
+/* Контент первых экранов прозрачный — огонь виден под ним. */
+.hero,
+.section#about {
+    position: relative;
+}
+
+/* Одинаковое затемнение под обеими кнопками первого экрана. */
+.hero__cta .btn,
+.hero__cta .btn--ghost {
+    background: color-mix(in srgb, var(--ground) 50%, transparent);
+}
+
+.hero__cta .btn:hover,
+.hero__cta .btn--ghost:hover {
+    background: color-mix(in srgb, var(--ground) 70%, transparent);
+}
+
+/* Мобильный слоган на 7 % крупнее — класс ставит slogan.js,
+   только если верхняя строка влезает по ширине. */
+.hero__sub--measuring,
+.hero__sub--big {
+    font-size: calc(clamp(18px, 5.9vw, 50.8px) * 1.07);
+    letter-spacing: -0.022em;
+}
+
+.hero__sub--measuring [data-slogan-line],
+.hero__sub--big [data-slogan-line] {
+    white-space: nowrap;
+}
+
+/* Проблеск по слогану: красный отблеск огня пробегает слева направо.
+   Белый слой снизу держит цвет текста, верхний — только полоса блика. */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+    .hero__sub {
+        background-image:
+            linear-gradient(105deg,
+                rgba(255, 122, 60, 0) 44%,
+                rgba(255, 92, 40, 0.36) 46.2%,
+                rgba(255, 228, 208, 1) 49.5%,
+                rgba(196, 38, 10, 0.92) 52.8%,
+                rgba(255, 92, 40, 0.32) 55.4%,
+                rgba(255, 122, 60, 0) 57.5%),
+            linear-gradient(#f5f0eb, #f5f0eb);
+        background-size: 240% 100%, 100% 100%;
+        background-repeat: no-repeat;
+        background-position: 100% 0, 0 0;
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+        animation: slogan-glint 12s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+    }
+}
+
+/* Слева направо: окно идёт по градиенту от конца к началу,
+   поэтому полоса блика движется вправо. */
+@keyframes slogan-glint {
+    0% {
+        background-position: 100% 0, 0 0;
+    }
+
+    45%,
+    100% {
+        background-position: 0% 0, 0 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero__sub {
+        animation: none;
+        background-position: 0% 0, 0 0;
+    }
+}
