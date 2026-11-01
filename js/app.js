@@ -52,6 +52,17 @@
           var panel = details.querySelector('.nom-group__body');
           details.style.overflow = 'hidden';
 
+          var targets = [];
+          if (panel) {
+            targets.push(panel);
+          } else {
+            for (var c = 0; c < details.children.length; c++) {
+              if (details.children[c].tagName !== 'SUMMARY') targets.push(details.children[c]);
+            }
+          }
+
+          var ease = 'cubic-bezier(.4, 0, .2, 1)';
+
           function finish() {
             details.style.height = '';
             details.style.overflow = '';
@@ -67,16 +78,18 @@
               { height: start + 'px' },
               { height: end + 'px' }
             ], {
-              duration: 440,
-              easing: 'cubic-bezier(.16, 1, .3, 1)'
+              duration: 620,
+              easing: ease
             });
-            if (panel) {
-              panel.animate([
-                { opacity: 0, transform: 'translateY(-12px)', filter: 'blur(5px)' },
-                { opacity: 1, transform: 'translateY(0)', filter: 'blur(0)' }
+            for (var t = 0; t < targets.length; t++) {
+              targets[t].animate([
+                { opacity: 0, transform: 'translateY(-24px)', filter: 'blur(8px)', clipPath: 'inset(0 0 100% 0)' },
+                { opacity: 1, transform: 'translateY(0)', filter: 'blur(0)', clipPath: 'inset(0 0 0 0)' }
               ], {
-                duration: 440,
-                easing: 'cubic-bezier(.16, 1, .3, 1)'
+                duration: 560,
+                delay: t * 70,
+                easing: ease,
+                fill: 'backwards'
               });
             }
             anim.onfinish = finish;
@@ -88,15 +101,15 @@
               { height: start + 'px' },
               { height: end + 'px' }
             ], {
-              duration: 340,
+              duration: 420,
               easing: 'cubic-bezier(.4, 0, .2, 1)'
             });
-            if (panel) {
-              panel.animate([
+            for (var o = 0; o < targets.length; o++) {
+              targets[o].animate([
                 { opacity: 1, transform: 'translateY(0)', filter: 'blur(0)' },
-                { opacity: 0, transform: 'translateY(-8px)', filter: 'blur(4px)' }
+                { opacity: 0, transform: 'translateY(-12px)', filter: 'blur(4px)' }
               ], {
-                duration: 340,
+                duration: 280,
                 easing: 'cubic-bezier(.4, 0, .2, 1)'
               });
             }

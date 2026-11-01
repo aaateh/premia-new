@@ -938,12 +938,8 @@ body.menu-open .header {
 .awards { position: relative; }
 
 .awards-line {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
   height: 130px;
-  z-index: 1;
+  margin-bottom: 8px;
   pointer-events: none;
 }
 
@@ -951,7 +947,6 @@ body.menu-open .header {
 
 .awards-grid {
   position: relative;
-  z-index: 2;
   align-items: end;
 }
 
