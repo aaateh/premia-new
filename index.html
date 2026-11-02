@@ -17,8 +17,35 @@
   <link rel="stylesheet" href="css/scroll-burn.css?v=5" />
   <link rel="stylesheet" href="css/fire.css?v=3" />
   <link rel="stylesheet" href="css/partners-form.css?v=1" />
+  <link rel="stylesheet" href="css/intro.css?v=6" />
+  <noscript>
+    <style>
+      .intro { display: none !important; }
+      body.is-intro { overflow: auto; }
+      body.is-intro .site,
+      body.is-intro .fire-scene { opacity: 1; pointer-events: auto; }
+    </style>
+  </noscript>
 </head>
-<body>
+<body class="is-intro">
+
+  <!-- Заставка: огонь виден только внутри логотипа и слогана -->
+  <div class="intro" id="intro" data-intro>
+    <canvas class="intro__canvas" data-intro-canvas aria-hidden="true"></canvas>
+    <div class="intro__vignette" aria-hidden="true"></div>
+    <video class="intro__video"
+           data-intro-video
+           muted
+           loop
+           playsinline
+           webkit-playsinline
+           preload="auto"
+           disablepictureinpicture
+           disableremoteplayback
+           aria-hidden="true"></video>
+
+    <button class="intro__skip" type="button" data-intro-skip>Пропустить</button>
+  </div>
 
 <div class="fire-scene fire-scene--dim"
      data-fire-scene
@@ -26,14 +53,12 @@
      data-rate="0.7"
      aria-hidden="true">
   <div class="fire-media">
-    <img class="fire-still" src="media/fire/fire-desktop-poster-1440.jpg" alt="" width="1440" height="900" decoding="async" />
     <video class="fire-video"
            muted
            loop
            playsinline
            webkit-playsinline
            preload="auto"
-           poster="media/fire/fire-desktop-poster-1440.jpg"
            disablepictureinpicture
            disableremoteplayback
            data-src-desktop="media/fire/fire-desktop-1440-loop.mp4"
@@ -983,12 +1008,52 @@
 
 </div><!-- /.site -->
 
-<script src="js/star-border.js?v=2"></script>
-<script src="js/app.js?v=9"></script>
-<script src="js/partners-form.js?v=1"></script>
-<script src="js/ignite-reveal.js?v=12" defer></script>
-<script src="js/slogan.js?v=1" defer></script>
-<script src="js/fire.js?v=4" defer></script>
-<script src="js/scroll-burn.js?v=16" defer></script>
+<script src="js/intro.js?v=8" defer></script>
+<script>
+  /* Сайт оживает после заставки: его скрипты подключаются на видимой
+     странице, поэтому анимации стартуют на месте, а не за кадром. */
+  (function () {
+    var files = [
+      'js/fire.js?v=5',
+      'js/star-border.js?v=2',
+      'js/app.js?v=9',
+      'js/partners-form.js?v=1',
+      'js/ignite-reveal.js?v=12',
+      'js/slogan.js?v=1',
+      'js/scroll-burn.js?v=16'
+    ];
+    var started = false;
+
+    function bootSite() {
+      if (started) return;
+      started = true;
+      var i = 0;
+      (function next() {
+        if (i >= files.length) return;
+        var s = document.createElement('script');
+        s.src = files[i++];
+        s.async = false;
+        s.onload = next;
+        s.onerror = next;
+        document.body.appendChild(s);
+      })();
+    }
+
+    document.addEventListener('intro:done', bootSite, { once: true });
+    setTimeout(bootSite, 12000);
+  })();
+</script>
+<script>
+  /* Страховка: если заставка не завершилась (ошибка/зависание), открываем сайт. */
+  setTimeout(function () {
+    var intro = document.getElementById('intro');
+    if (intro && !intro.hidden) {
+      intro.hidden = true;
+      document.body.classList.remove('is-intro');
+      var site = document.querySelector('.site');
+      if (site) site.inert = false;
+    }
+  }, 12000);
+</script>
 </body>
 </html>

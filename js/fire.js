@@ -36,6 +36,7 @@
     var sparks = null;
     var sceneVisible = true;
     var burnVisible = false;
+    var burnActive = false;
     var suspended = false;
 
     video.muted = true;
@@ -132,6 +133,9 @@
 
     createBurn(function (visible) {
         burnVisible = visible;
+        /* Если заголовок миссии в кадре, огонь в буквах важнее паузы
+           на время прожига между секциями. */
+        suspended = burnActive && !burnVisible;
         sync();
     });
     observeScene();
@@ -394,7 +398,8 @@
     /* Во время прожига между секциями огонь замирает: полноэкранное видео
        и искры не конкурируют с SVG-фильтром кромки. После паузы возвращается. */
     window.addEventListener('scrollburn:active', function (event) {
-        suspended = !!(event.detail && event.detail.active);
+        burnActive = !!(event.detail && event.detail.active);
+        suspended = burnActive && !burnVisible;
         sync();
     });
 
