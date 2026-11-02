@@ -64,9 +64,11 @@
       this.edgeSvg = null;
       this.path = null;
       this.config = null;
+      this.armed = false;
       this.seed = blockSeed(cfg.seed, index);
       this.docTop = 0;
       this.height = 0;
+      this.width = 0;
       this.v = 300;
       this.edge = 6;
       this.build();
@@ -93,10 +95,10 @@
 
       const filter = svgEl('filter', {
         id,
-        x: '-10%',
-        y: '-10%',
-        width: '120%',
-        height: '120%',
+        x: '0',
+        y: '0',
+        width: '100%',
+        height: '100%',
         'color-interpolation-filters': 'sRGB'
       });
 
@@ -194,7 +196,9 @@
     measure() {
       const rect = this.el.getBoundingClientRect();
       this.height = rect.height;
+      this.width = rect.width;
       this.docTop = rect.top + (window.scrollY || window.pageYOffset || 0);
+      this.written = -1;
     }
 
     apply(config) {
@@ -221,7 +225,6 @@
       padStyle.right = `${-padInset}px`;
       padStyle.bottom = `${-padInset}px`;
       padStyle.left = `${-padInset}px`;
-      padStyle.filter = `url(#${this.filterId})`;
 
       const fillStyle = this.fill.style;
       fillStyle.height = `calc(100% - ${padInset * 2}px)`;
@@ -239,16 +242,16 @@
       this.written = -1;
     }
 
-    updateWebkit(config, viewportHeight, reducedMotion) {
-      const r = this.el.getBoundingClientRect();
-      const H = r.height || 1;
+    updateWebkit(config, viewportHeight, rectTop, reducedMotion) {
+      const H = this.height || 1;
+      const W = this.width || 1;
       const startPx = (config.start / 100) * viewportHeight;
       const endPx = (config.end / 100) * viewportHeight -
         (this.edge + config.displacement / 2 + 8);
       const begin = this.docTop > endPx + 1
         ? Math.min(startPx, this.docTop)
         : startPx;
-      const target = clamp((begin - r.top) / ((begin - endPx) || 1), 0, 1);
+      const target = clamp((begin - rectTop) / ((begin - endPx) || 1), 0, 1);
 
       let next;
       if (reducedMotion || config.smoothing <= 0) {
@@ -270,9 +273,9 @@
       }
       if (!show) return settling;
       /* Секция вне экрана — рисовать нечего. */
-      if (r.bottom <= 0 || r.top >= viewportHeight) return settling;
+      if (rectTop + H <= 0 || rectTop >= viewportHeight) return settling;
       if (this.written !== next) {
-        this.draw(next, r.width, H);
+        this.draw(next, W, H);
         this.written = next;
       }
       return settling;
@@ -338,10 +341,24 @@
       this.path.setAttribute('d', d);
     }
 
+    arm() {
+      if (this.isWebkit || this.armed || !this.pad) return;
+      this.pad.style.filter = `url(#${this.filterId})`;
+      this.armed = true;
+    }
+
+    maybeArm(rectTop, viewportHeight) {
+      if (this.isWebkit || this.armed) return;
+      if (rectTop < viewportHeight * 1.5 && rectTop + this.height > -viewportHeight) {
+        this.arm();
+      }
+    }
+
     update(config, viewportHeight, rectTop, reducedMotion) {
       if (this.isWebkit) {
-        return this.updateWebkit(config, viewportHeight, reducedMotion);
+        return this.updateWebkit(config, viewportHeight, rectTop, reducedMotion);
       }
+      this.maybeArm(rectTop, viewportHeight);
       const startPx = (config.start / 100) * viewportHeight;
       const endPx = (config.end / 100) * viewportHeight - (this.edge + config.displacement / 2 + 8);
 
@@ -380,6 +397,12 @@
     }
   }
 
+  let started = false;
+
+  const start = () => {
+    if (started) return;
+    started = true;
+
   const burnNodes = [...document.querySelectorAll('[data-burn]')];
   const burns = burnNodes.map((el, index) => new Burn(el, index));
 
@@ -394,12 +417,12 @@
 
   const applyAll = () => burns.forEach((burn) => burn.apply(cfg));
 
-  const write = () => {
+  const write = (y) => {
     const max = document.documentElement.scrollHeight - window.innerHeight;
-    const ratio = max > 0 ? clamp(window.scrollY / max, 0, 1) : 0;
+    const ratio = max > 0 ? clamp(y / max, 0, 1) : 0;
     if (scrollbar) scrollbar.style.transform = `scaleX(${ratio.toFixed(4)})`;
 
-    const scrolled = window.scrollY > 40;
+    const scrolled = y > 40;
     if (scrolled !== scrolledClass) {
       document.body.classList.toggle('is-scrolled', scrolled);
       scrolledClass = scrolled;
@@ -411,12 +434,12 @@
   const tick = () => {
     rafId = 0;
     const viewportHeight = window.innerHeight || 1;
-    const tops = burns.map((burn) => burn.el.getBoundingClientRect().top);
+    const y = window.scrollY || 0;
     let settling = false;
-    burns.forEach((burn, index) => {
-      if (burn.update(cfg, viewportHeight, tops[index], reducedMotion)) settling = true;
-    });
-    write();
+    for (const burn of burns) {
+      if (burn.update(cfg, viewportHeight, burn.docTop - y, reducedMotion)) settling = true;
+    }
+    write(y);
     if (settling) requestTick();
   };
 
@@ -441,7 +464,6 @@
 
   window.addEventListener('resize', () => {
     burns.forEach((burn) => burn.measure());
-    applyAll();
     requestTick();
   });
 
@@ -450,12 +472,6 @@
     requestTick();
   });
 
-  if (document.fonts?.ready) {
-    document.fonts.ready.then(() => {
-      burns.forEach((burn) => burn.measure());
-      requestTick();
-    });
-  }
 
   /* ------------------------------------------------------------------ */
   /* Пульт                                                               */
@@ -555,4 +571,24 @@
 
     syncInputs();
   }
+  };
+
+  /* Тяжёлая инициализация — после первого кадра, чтобы страница успела
+     показаться. Если пользователь сразу скроллит или трогает пульт —
+     запускаем немедленно. */
+  const scheduleStart = () => {
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(start, { timeout: 400 });
+    } else {
+      setTimeout(start, 0);
+    }
+  };
+
+  if (document.readyState === 'complete') {
+    scheduleStart();
+  } else {
+    window.addEventListener('load', scheduleStart, { once: true });
+  }
+  window.addEventListener('scroll', start, { passive: true, once: true });
+  window.addEventListener('pointerdown', start, { passive: true, once: true });
 })();
