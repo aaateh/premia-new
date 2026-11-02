@@ -43,6 +43,16 @@
 
 .fire-still {
     z-index: 0;
+    transition: opacity .6s ease;
+}
+
+/* Пока видео грузится — показываем постер, после первого кадра убираем. */
+.fire-scene.is-ready .fire-still {
+    opacity: 0;
+}
+
+.fire-scene.is-still .fire-still {
+    opacity: 1;
 }
 
 .fire-video {

@@ -255,12 +255,7 @@
     updateVector(config, viewportHeight, rectTop, reducedMotion) {
       const H = this.height || 1;
       const W = this.width || 1;
-      /* Короткая секция: начинаем, когда следующий блок уже входит
-         в нижнюю кромку экрана, иначе прожиг появляется слишком поздно. */
-      const shortStart = this.el.classList.contains('burn--viewport')
-        ? 0
-        : Math.max(0, viewportHeight - this.height);
-      const startPx = (config.start / 100) * viewportHeight + shortStart;
+      const startPx = (config.start / 100) * viewportHeight;
       const endPx = (config.end / 100) * (this.height || viewportHeight) -
         (this.edge + config.displacement / 2 + 8);
       const begin = this.docTop > endPx + 1
@@ -385,12 +380,7 @@
         return this.updateVector(config, viewportHeight, rectTop, reducedMotion);
       }
       this.maybeArm(rectTop, viewportHeight);
-      /* Короткая секция: начинаем, когда следующий блок уже входит
-         в нижнюю кромку экрана, иначе прожиг появляется слишком поздно. */
-      const shortStart = this.el.classList.contains('burn--viewport')
-        ? 0
-        : Math.max(0, viewportHeight - this.height);
-      const startPx = (config.start / 100) * viewportHeight + shortStart;
+      const startPx = (config.start / 100) * viewportHeight;
       const endPx = (config.end / 100) * (this.height || viewportHeight) -
         (this.edge + config.displacement / 2 + 8);
 

@@ -501,7 +501,7 @@
             sceneVisible = next;
             scene.classList.toggle('is-offscreen', !sceneVisible);
             sync();
-        }, { rootMargin: '240px 0px' });
+        }, { rootMargin: '0px 0px' });
 
         sections.forEach(function (item) {
             observer.observe(item);
