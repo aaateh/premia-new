@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scroll Burn — локальная демонстрация · Суровая премия</title>
+<meta name="description" content="Локальная демонстрация эффекта Scroll Burn: следующий экран прожигает предыдущий органической кромкой на скролле.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23F56624'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="burn.css?v=11">
+</head>
+<body>
+
+<div class="scrollbar" aria-hidden="true"><span id="scrollbar"></span></div>
+
+<main>
+
+  <!-- 01. Пролог -->
+  <section class="screen screen--dark" id="s1">
+    <div class="burn" data-burn data-color="#ECE9E3" aria-hidden="true"></div>
+    <div class="screen__ghost" aria-hidden="true">01</div>
+
+    <header class="screen__top">
+      <span class="brand"><i aria-hidden="true"></i>Суровая премия</span>
+      <span class="mono">01 / Пролог</span>
+    </header>
+
+    <div class="screen__main">
+      <p class="eyebrow">Эксперимент — переход экранов</p>
+
+      <div class="hero__grid">
+        <h1 class="display display--hero">ГОРИ<span class="accent">.</span></h1>
+        <div class="hero__aside">
+          <p class="lead">Следующий экран входит в предыдущий, как огонь в бумагу. Скролльте вниз — и он поглотит всё, что было до него.</p>
+          <ul class="ticks">
+            <li>SVG / Canvas</li>
+            <li>Без WebGL</li>
+            <li>Обратимо</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <footer class="screen__bottom">
+      <span class="mono">Scroll Burn / демо</span>
+      <span class="hint">Прокрутите <i aria-hidden="true"></i></span>
+      <span class="mono">2026</span>
+    </footer>
+  </section>
+
+  <!-- 02. Отбор -->
+  <section class="screen screen--paper" id="s2">
+    <div class="burn" data-burn data-color="#080607" aria-hidden="true"></div>
+    <div class="screen__ghost" aria-hidden="true">02</div>
+
+    <header class="screen__top">
+      <span class="brand"><i aria-hidden="true"></i>Суровая премия</span>
+      <span class="mono">02 / Отбор</span>
+    </header>
+
+    <div class="screen__main">
+      <p class="eyebrow">Второй экран — светлый</p>
+
+      <div class="headrow">
+        <h2 class="display">ОТБОР<span class="accent">.</span></h2>
+        <p class="lead">Мы не ищем удобных. Мы ищем тех, кто делает вопреки: без бюджета, без команды, без разрешения.</p>
+      </div>
+
+      <div class="steps">
+        <div class="step"><span>01</span><b>Заявка</b><em>до 12 января</em></div>
+        <div class="step"><span>02</span><b>Шорт-лист</b><em>40 проектов</em></div>
+        <div class="step"><span>03</span><b>Сцена</b><em>один вечер</em></div>
+      </div>
+    </div>
+
+    <footer class="screen__bottom">
+      <span class="mono">Сезон 2026</span>
+      <span class="mono">Бумага / #ECE9E3</span>
+      <span class="mono">02 / 05</span>
+    </footer>
+  </section>
+
+  <!-- 03. Финал -->
+  <section class="screen screen--dark" id="s3">
+    <div class="burn" data-burn data-color="#F56624" aria-hidden="true"></div>
+    <div class="screen__ghost" aria-hidden="true">03</div>
+
+    <header class="screen__top">
+      <span class="brand"><i aria-hidden="true"></i>Суровая премия</span>
+      <span class="mono">03 / Финал</span>
+    </header>
+
+    <div class="screen__main">
+      <p class="eyebrow">Третий экран — тёмный</p>
+
+      <div class="headrow">
+        <h2 class="display">ФИНАЛ<span class="accent">.</span></h2>
+        <div class="nom">
+          <p class="lead">Четыре номинации. Один вечер. Никаких «все молодцы».</p>
+          <ol class="nom__list">
+            <li><span>01</span><b>Лучший проект</b></li>
+            <li><span>02</span><b>Лучший дизайн</b></li>
+            <li><span>03</span><b>Лучший код</b></li>
+            <li><span>04</span><b>Лучший тон</b></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <footer class="screen__bottom">
+      <span class="mono">Москва</span>
+      <span class="mono">14 февраля</span>
+      <span class="mono">03 / 05</span>
+    </footer>
+  </section>
+
+  <!-- 04. Победа -->
+  <section class="screen screen--accent" id="s4">
+    <div class="burn" data-burn data-color="#080607" aria-hidden="true"></div>
+    <div class="screen__ghost" aria-hidden="true">04</div>
+
+    <header class="screen__top">
+      <span class="brand"><i aria-hidden="true"></i>Суровая премия</span>
+      <span class="mono">04 / Победитель</span>
+    </header>
+
+    <div class="screen__main">
+      <p class="eyebrow">Четвёртый экран — оранжевый</p>
+
+      <h2 class="display display--wide">ПОБЕДА<span class="accent">.</span></h2>
+
+      <div class="winrow">
+        <p class="lead">Не «участие». Не «опыт». Победа. Одна на всех — и без исключений.</p>
+        <div class="stamp" aria-hidden="true">
+          <span>2026</span>
+          <small>один<br>на всех</small>
+        </div>
+      </div>
+    </div>
+
+    <footer class="screen__bottom">
+      <span class="mono">Суровая премия</span>
+      <span class="mono">Огонь / #F56624</span>
+      <span class="mono">04 / 05</span>
+    </footer>
+  </section>
+
+  <!-- 05. Эффект -->
+  <section class="screen screen--dark" id="s5">
+    <div class="burn" data-burn data-color="#ECE9E3" aria-hidden="true"></div>
+    <div class="screen__ghost" aria-hidden="true">05</div>
+
+    <header class="screen__top">
+      <span class="brand"><i aria-hidden="true"></i>Суровая премия</span>
+      <span class="mono">05 / Эффект</span>
+    </header>
+
+    <div class="screen__main">
+      <p class="eyebrow">Пятый экран — разбор</p>
+
+      <h2 class="display display--tight">ЭФФЕКТ<br>ЖИВОЙ<span class="accent">.</span></h2>
+
+      <div class="cols">
+        <p class="lead">Это не видео и не WebGL. Живой фильтр: шум, смещение, жёсткий порог альфы; в Chrome — SVG, в Safari — Canvas2D. Он живёт на скролле — вперёд и назад.</p>
+        <ul class="specs">
+          <li><b>feTurbulence</b><span>органический шум</span></li>
+          <li><b>feDisplacementMap</b><span>рваная кромка</span></li>
+          <li><b>discrete alpha</b><span>жёсткий порог</span></li>
+          <li><b>rAF + easing</b><span>инерция скролла</span></li>
+        </ul>
+      </div>
+
+      <p class="note"><i aria-hidden="true"></i>Пульт справа. Покрутите параметры и пролистайте ещё раз. Вверх — огонь отступает.</p>
+    </div>
+
+    <footer class="screen__bottom">
+      <span class="mono">Демонстрация</span>
+      <span class="mono">Без зависимостей</span>
+      <span class="mono">05 / 05</span>
+    </footer>
+  </section>
+
+  <!-- Финал -->
+  <section class="screen screen--paper screen--footer" id="s6">
+    <header class="screen__top">
+      <span class="brand"><i aria-hidden="true"></i>Суровая премия</span>
+      <span class="mono">Конец</span>
+    </header>
+
+    <div class="screen__main">
+      <p class="eyebrow">Демонстрация эффекта</p>
+      <h2 class="display display--footer">СКРУЧЕНО<span class="accent">.</span></h2>
+
+      <div class="footgrid">
+        <div>
+          <h3>Что это</h3>
+          <p>Локальная проба эффекта Scroll Burn (Kush Verma) для «Суровой премии». Переход между экранами на живом фильтре, без видео и сторонних библиотек.</p>
+        </div>
+        <div>
+          <h3>Технология</h3>
+          <p>feTurbulence + feDisplacementMap + порог альфы. Прогресс считается по положению секции, сглаживается через rAF.</p>
+        </div>
+        <div>
+          <h3>Шрифты</h3>
+          <p>Dela Gothic One, Golos Text, Geist Mono. Свободные лицензии, локальные файлы проекта.</p>
+        </div>
+      </div>
+    </div>
+
+    <footer class="screen__bottom">
+      <span class="mono">2026 / эксперимент</span>
+      <a class="totop mono" href="#s1">Наверх ↑</a>
+      <span class="mono">Scroll Burn</span>
+    </footer>
+  </section>
+
+</main>
+
+<!-- Пульт параметров -->
+<div class="lab" id="lab">
+  <button class="lab__toggle" id="labToggle" type="button" aria-expanded="false" aria-controls="labPanel">
+    Пульт <span class="lab__dot" aria-hidden="true"></span>
+  </button>
+
+  <div class="lab__panel" id="labPanel" aria-hidden="true" aria-label="Параметры эффекта" inert>
+    <header class="lab__head">
+      <div>
+        <span class="lab__kicker">Scroll Burn</span>
+        <strong>Параметры</strong>
+      </div>
+      <button class="lab__close" id="labClose" type="button" aria-label="Закрыть пульт">×</button>
+    </header>
+
+    <div class="lab__body">
+      <div class="lab__field">
+        <span class="lab__label">Направление</span>
+        <div class="seg" role="group" aria-label="Направление прожига">
+          <button type="button" data-dir="up" aria-pressed="true">Вверх</button>
+          <button type="button" data-dir="down" aria-pressed="false">Вниз</button>
+        </div>
+      </div>
+
+      <label class="lab__field">
+        <span class="lab__label">Сглаживание <output data-out="smoothing">0.12</output></span>
+        <input type="range" data-key="smoothing" min="0.02" max="1" step="0.01" value="0.12">
+        <small>1 — мгновенно, 0.02 — лениво</small>
+      </label>
+
+      <label class="lab__field">
+        <span class="lab__label">Начало <output data-out="start">0%</output></span>
+        <input type="range" data-key="start" min="-100" max="200" step="5" value="0">
+      </label>
+
+      <label class="lab__field">
+        <span class="lab__label">Конец <output data-out="end">−100%</output></span>
+        <input type="range" data-key="end" min="-100" max="200" step="5" value="-100">
+      </label>
+
+      <label class="lab__field">
+        <span class="lab__label">Размер кляксы <output data-out="displacement">220&nbsp;px</output></span>
+        <input type="range" data-key="displacement" min="0" max="400" step="10" value="220">
+      </label>
+
+      <label class="lab__field">
+        <span class="lab__label">Шум X <output data-out="frequencyX">0.015</output></span>
+        <input type="range" data-key="frequencyX" min="0.002" max="0.08" step="0.001" value="0.015">
+      </label>
+
+      <label class="lab__field">
+        <span class="lab__label">Шум Y <output data-out="frequencyY">0.020</output></span>
+        <input type="range" data-key="frequencyY" min="0.002" max="0.08" step="0.001" value="0.02">
+      </label>
+
+      <label class="lab__field">
+        <span class="lab__label">Детализация <output data-out="octaves">3</output></span>
+        <input type="range" data-key="octaves" min="1" max="6" step="1" value="3">
+      </label>
+
+      <label class="lab__field">
+        <span class="lab__label">Seed <output data-out="seed">7</output></span>
+        <input type="range" data-key="seed" min="0" max="100" step="1" value="7">
+      </label>
+    </div>
+
+    <footer class="lab__foot">
+      <button type="button" class="lab__reset" id="labReset">Сбросить</button>
+      <span>SVG / Canvas · без WebGL</span>
+    </footer>
+  </div>
+</div>
+
+<script src="burn.js?v=18" defer></script>
+</body>
+</html>
