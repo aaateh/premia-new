@@ -216,10 +216,14 @@
       var reduced = window.matchMedia &&
         window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      window.scrollTo({
-        top: top,
-        behavior: reduced ? 'auto' : 'smooth'
-      });
+      if (!reduced && window.siteScrollToY) {
+        window.siteScrollToY(top);
+      } else {
+        window.scrollTo({
+          top: top,
+          behavior: reduced ? 'auto' : 'smooth'
+        });
+      }
 
       if (window.history && history.replaceState) history.replaceState(null, '', hash);
     });
