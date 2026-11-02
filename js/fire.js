@@ -648,9 +648,6 @@
             if (!width || !height || !videoWidth || !videoHeight || video.readyState < 2) {
                 return;
             }
-            if (video.paused) {
-                return;
-            }
 
             sizeCanvas();
             var scale = Math.max(width / videoWidth, height / videoHeight);
@@ -683,7 +680,11 @@
                 last = now;
                 draw();
             }
-            raf = window.requestAnimationFrame(tick);
+            /* На паузе достаточно одного кадра — буквы замирают вместе
+               с фоновым огнём, а не живут своей жизнью. */
+            if (!video.paused) {
+                raf = window.requestAnimationFrame(tick);
+            }
         }
 
         function schedule() {
@@ -740,6 +741,13 @@
                     mask = '';
                 }
             }, 180);
+        });
+
+        /* Огонь снова пошёл — продолжаем перерисовывать буквы. */
+        video.addEventListener('play', function () {
+            if (visible) {
+                schedule();
+            }
         });
 
         document.addEventListener('visibilitychange', function () {

@@ -691,41 +691,22 @@ body.menu-open .header {
   mask-repeat: no-repeat;
 }
 
+/* «Сильная работа…» — огонь в буквах рисует canvas из того же ролика, что
+   и фон. Отдельной картинки-подложки нет: пока ролик на паузе, в буквах
+   стоит его последний кадр — как и во всём фоновом огне. */
+#mission h2 {
+  color: var(--ink);
+}
+
 #mission h2.is-video-burn {
   background-color: transparent;
   background-image: none;
   animation: none;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 
 #mission h2.is-video-burn .mission__burn { display: block; }
-
-/* «Сильная работа…» — огонь внутри букв; анимация включается только в кадре */
-@supports ((background-clip: text) or (-webkit-background-clip: text)) {
-  #mission h2 {
-    background-color: var(--ink);
-    background-image: url("../img/fire-text.webp");
-    background-repeat: repeat;
-    background-position: 50% 0;
-    background-size: 100% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-    animation: fire-text 7s ease-in-out infinite alternate;
-    animation-play-state: paused;
-  }
-
-  #mission h2.is-burning { animation-play-state: running; }
-}
-
-@keyframes fire-text {
-  from { background-position: 50% 0; }
-  to { background-position: 50% -140px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #mission h2 { animation: none; }
-}
 
 @media (forced-colors: active) {
   #mission h2 {
