@@ -14,6 +14,7 @@ jury.html
 css/tokens.css
 css/style.css
 css/fire.css            (сцена с огнём на первых двух экранах)
+css/scroll-burn.css     (кромка прожига между секциями)
 css/partners-form.css     (стили формы «Стать партнёром»)
 js/                       (если менялся)
 js/fire.js                (огонь, искры, пауза, скорость)

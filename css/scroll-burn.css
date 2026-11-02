@@ -1,6 +1,6 @@
 /* ==========================================================================
    Scroll Burn — прожиг между секциями.
-   Ядро эффекта: canvas-кромка и два слоя, двигаемых только transform.
+   Chrome: живой SVG-фильтр. Safari/WebKit: SVG-путь с CSS-заливкой.
    ========================================================================== */
 
 /* секция-хозяин прожига */
@@ -24,32 +24,37 @@
   height: 100svh;
 }
 
-.burn__solid {
-  position: absolute;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  transform: translate3d(0, 0, 0) scaleY(0);
-  transform-origin: 50% 100%;
-  will-change: transform;
-}
-
-.burn__band {
+/* SVG-контейнер фильтра (1×1, не занимает место) */
+.burn__defs {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  will-change: transform;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  pointer-events: none;
 }
 
-.burn__band-inner {
+/* область с запасом под смещение и блюр */
+.burn__pad {
+  position: absolute;
+}
+
+/* заливка цвета следующей секции */
+.burn__fill {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  transform: scaleY(0);
+}
+
+/* Safari/WebKit: кромка простым путём, цвет — CSS-заливкой */
+.burn__edge {
   position: absolute;
   inset: 0;
-}
-
-.burn__band-canvas {
   display: block;
   width: 100%;
   height: 100%;
+  overflow: visible;
+  pointer-events: none;
 }
