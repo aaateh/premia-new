@@ -22,14 +22,14 @@
     seed: 7
   });
 
-  /* На сайте используем векторную кромку во всех браузерах: живой
-     полноэкранный SVG-фильтр на тяжёлой странице заметно просаживает
-     плавность прокрутки. */
-  const USE_VECTOR_EDGE = true;
+  /* Safari/WebKit: полноэкранный живой SVG-фильтр не отрисовывается,
+     поэтому там векторная кромка. Chrome остаётся на живом фильтре. */
+  const USE_VECTOR_EDGE = /AppleWebKit/i.test(navigator.userAgent) &&
+    !/Chrome|Chromium|Edg|OPR|CriOS|FxiOS/i.test(navigator.userAgent);
 
   const VECTOR_DEFAULTS = Object.freeze({
     smoothing: 0.32,
-    start: -10,
+    start: 0,
     end: -100,
     displacement: 310,
     frequencyX: 0.008,
@@ -41,7 +41,9 @@
   /* У каждого блока свой рисунок кромки: базовый seed + смещение. */
   const blockSeed = (base, index) => base + index * 17;
 
-  const BASE = { ...DEFAULTS, ...VECTOR_DEFAULTS };
+  const BASE = USE_VECTOR_EDGE
+    ? { ...DEFAULTS, ...VECTOR_DEFAULTS }
+    : DEFAULTS;
   const cfg = { ...BASE };
   let requestTick = () => {};
 
@@ -253,7 +255,12 @@
     updateVector(config, viewportHeight, rectTop, reducedMotion) {
       const H = this.height || 1;
       const W = this.width || 1;
-      const startPx = (config.start / 100) * viewportHeight;
+      /* Короткая секция: начинаем, когда следующий блок уже входит
+         в нижнюю кромку экрана, иначе прожиг появляется слишком поздно. */
+      const shortStart = this.el.classList.contains('burn--viewport')
+        ? 0
+        : Math.max(0, viewportHeight - this.height);
+      const startPx = (config.start / 100) * viewportHeight + shortStart;
       const endPx = (config.end / 100) * (this.height || viewportHeight) -
         (this.edge + config.displacement / 2 + 8);
       const begin = this.docTop > endPx + 1
@@ -378,7 +385,12 @@
         return this.updateVector(config, viewportHeight, rectTop, reducedMotion);
       }
       this.maybeArm(rectTop, viewportHeight);
-      const startPx = (config.start / 100) * viewportHeight;
+      /* Короткая секция: начинаем, когда следующий блок уже входит
+         в нижнюю кромку экрана, иначе прожиг появляется слишком поздно. */
+      const shortStart = this.el.classList.contains('burn--viewport')
+        ? 0
+        : Math.max(0, viewportHeight - this.height);
+      const startPx = (config.start / 100) * viewportHeight + shortStart;
       const endPx = (config.end / 100) * (this.height || viewportHeight) -
         (this.edge + config.displacement / 2 + 8);
 
