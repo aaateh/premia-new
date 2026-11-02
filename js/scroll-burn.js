@@ -137,24 +137,16 @@
         tableValues: '0 0 0 0 0 1 1 1 1 1'
       }));
 
-      const flood = svgEl('feFlood', {
-        'flood-color': this.color,
-        result: 'ink'
-      });
-
-      const tint = svgEl('feComposite', {
-        in: 'ink',
-        in2: 'cut',
-        operator: 'in',
-        result: 'tinted'
-      });
-
+      /* Цвет уже есть у самой заливки (.burn__fill), поэтому feFlood и
+         feComposite не нужны: они гоняли ещё два полноэкранных прохода
+         фильтра на каждый кадр. Как в оригинальном компоненте Framer —
+         только шум, смещение, срез и лёгкое размытие. */
       const postBlur = svgEl('feGaussianBlur', {
-        in: 'tinted',
+        in: 'cut',
         stdDeviation: '0.4'
       });
 
-      filter.append(this.turbulence, this.displacement, preSmooth, cut, flood, tint, postBlur);
+      filter.append(this.turbulence, this.displacement, preSmooth, cut, postBlur);
 
       const defs = svgEl('defs');
       defs.appendChild(filter);
@@ -165,6 +157,7 @@
 
       const pad = document.createElement('div');
       pad.className = 'burn__pad';
+      pad.style.visibility = 'hidden';
 
       const fill = document.createElement('div');
       fill.className = 'burn__fill';
@@ -209,6 +202,7 @@
       this.width = rect.width;
       this.docTop = rect.top + (window.scrollY || window.pageYOffset || 0);
       this.written = -1;
+      if (this.isVector) this.buildVectorShape();
     }
 
     apply(config) {
@@ -216,7 +210,10 @@
       this.seed = blockSeed(config.seed, this.index);
       this.edge = Math.ceil(config.displacement / 2) + 6;
       this.written = -1;
-      if (this.isVector) return;
+      if (this.isVector) {
+        this.buildVectorShape();
+        return;
+      }
       this.turbulence.setAttribute(
         'baseFrequency',
         `${config.frequencyX} ${config.frequencyY}`
@@ -254,7 +251,6 @@
 
     updateVector(config, viewportHeight, rectTop, reducedMotion) {
       const H = this.height || 1;
-      const W = this.width || 1;
       const startPx = (config.start / 100) * viewportHeight;
       const endPx = (config.end / 100) * (this.height || viewportHeight) -
         (this.edge + config.displacement / 2 + 8);
@@ -279,15 +275,14 @@
       if (show !== this.visible) {
         this.visible = show;
         this.edgeSvg.style.visibility = show ? 'visible' : 'hidden';
+        this.edgeSvg.style.willChange = show ? 'transform' : '';
         this.written = -1;
       }
       if (!show) return settling;
-      /* Секция вне экрана — рисовать нечего. */
+      /* Секция вне экрана — двигать нечего. */
       if (rectTop + H <= 0 || rectTop >= viewportHeight) return settling;
-      if (this.written !== next) {
-        this.draw(next, W, H);
-        this.written = next;
-      }
+      this.moveVector(next);
+      this.written = next;
       return settling;
     }
 
@@ -317,19 +312,24 @@
       return total ? (value / total) * 2 : 0;
     }
 
-    draw(p, W, H) {
+    /* Статичная кромка: рисуем её один раз, а при скролле только сдвигаем
+       готовый путь трансформом. Раньше строка path собиралась заново на
+       каждом кадре — на этом Safari и спотыкался. */
+    buildVectorShape() {
       const cfg = this.config;
       if (!cfg || !this.path) return;
+      const W = this.width || 1;
+      const H = this.height || 1;
       const up = cfg.direction === 'up';
-      const edge = up ? H * (1 - p) + this.edge : p * H - this.edge;
+      const edge = up ? this.edge : -this.edge;
       const amp = Math.min(cfg.displacement * 0.28, 120);
       /* Шум статичный, как feTurbulence: кромка не «кипит» без скролла. */
       const t = 0;
       const step = Math.max(3, W / 400);
 
-      /* Низ (или верх при direction:'down') уходит за границу секции,
-         чтобы на стыке с соседним блоком не было полупрозрачной кромки. */
-      const solid = up ? H + 2 : -2;
+      /* Твердь уходит далеко за секцию: при сдвиге пути вниз/вверх
+         между кромкой и стыком не появляется дырки. */
+      const solid = up ? H * 2 + 2 : -H * 2 - 2;
 
       const yAt = (x) => {
         const n = this.noise(x, t, cfg.octaves, cfg.frequencyX);
@@ -349,11 +349,27 @@
       for (const [x, y] of pts) d += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
       d += ` L ${W.toFixed(1)} ${solid.toFixed(1)} Z`;
       this.path.setAttribute('d', d);
+      this.lastTransform = null;
+      this.written = -1;
+    }
+
+    moveVector(p) {
+      if (!this.path || !this.config) return;
+      const H = this.height || 1;
+      const y = this.config.direction === 'up' ? H * (1 - p) : H * p;
+      if (this.lastTransform !== null && Math.abs(this.lastTransform - y) < 0.01) return;
+      this.lastTransform = y;
+      this.path.style.transform = `translate3d(0, ${y.toFixed(2)}px, 0)`;
     }
 
     arm() {
       if (this.isVector || this.armed || !this.pad) return;
+      /* Как в оригинале: отдельный слой и готовый фильтр до начала
+         прожига, чтобы первый кадр не тратился на их создание. */
       this.pad.style.filter = `url(#${this.filterId})`;
+      this.pad.style.willChange = 'transform';
+      this.pad.style.visibility = 'visible';
+      this.fill.style.willChange = 'transform';
       this.armed = true;
     }
 
@@ -371,6 +387,9 @@
         rectTop + this.height < -viewportHeight * 2.5
       )) {
         this.pad.style.filter = 'none';
+        this.pad.style.willChange = '';
+        this.pad.style.visibility = 'hidden';
+        this.fill.style.willChange = '';
         this.armed = false;
       }
     }
@@ -404,10 +423,6 @@
       const settling = Math.abs(next - target) > 0.0005;
 
       const show = next > 0.0005;
-      if (show !== this.visible) {
-        this.visible = show;
-        this.pad.style.visibility = show ? 'visible' : 'hidden';
-      }
       if (!show) return settling;
 
       if (Math.abs(next - this.written) > 0.0002 || next === 0 || next === 1) {
@@ -452,6 +467,7 @@
   };
 
   let rafId = 0;
+  let lastY = window.scrollY || 0;
   let firePaused = false;
   let firePauseTimer = 0;
 
@@ -473,6 +489,12 @@
     rafId = 0;
     const viewportHeight = window.innerHeight || 1;
     const y = window.scrollY || 0;
+    /* Прыжок по якорю или восстановление позиции: не прожигаем экран
+       обратно через полстраницы, а сразу встаём в целевую точку. */
+    if (Math.abs(y - lastY) > viewportHeight * 1.5) {
+      burns.forEach((burn) => { burn.progress = -1; });
+    }
+    lastY = y;
     let settling = false;
     for (const burn of burns) {
       if (burn.update(cfg, viewportHeight, burn.docTop - y, reducedMotion)) settling = true;
