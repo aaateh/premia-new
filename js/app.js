@@ -182,6 +182,49 @@
     document.addEventListener('visibilitychange', apply);
   })();
 
+  // якорные ссылки: точно доводим до секции с отступом под закреплённую шапку
+  (function anchorScroll() {
+    var header = document.querySelector('.header');
+
+    function offset() {
+      return header ? header.getBoundingClientRect().height + 16 : 16;
+    }
+
+    document.addEventListener('click', function (event) {
+      if (event.defaultPrevented || event.button !== 0 ||
+        event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+      var link = event.target.closest ? event.target.closest('a[href^="#"]') : null;
+      if (!link || link.hasAttribute('data-partner-open')) return;
+
+      var hash = link.getAttribute('href');
+      if (!hash || hash === '#') return;
+
+      var target;
+      try {
+        target = document.querySelector(hash);
+      } catch (error) {
+        return;
+      }
+      if (!target) return;
+
+      event.preventDefault();
+
+      var top = target.getBoundingClientRect().top + (window.pageYOffset || 0) - offset();
+      if (top < 0) top = 0;
+
+      var reduced = window.matchMedia &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      window.scrollTo({
+        top: top,
+        behavior: reduced ? 'auto' : 'smooth'
+      });
+
+      if (window.history && history.replaceState) history.replaceState(null, '', hash);
+    });
+  })();
+
   var burger = document.getElementById('burger');
   var nav = document.getElementById('nav');
   if (!burger || !nav) return;

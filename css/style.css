@@ -445,7 +445,7 @@ body.menu-open .header {
   padding: clamp(64px, 7.5vw, 108px) 0;
   border-top: 1px solid var(--rule);
   background: var(--ground);
-  scroll-margin-top: 96px;
+  scroll-margin-top: 114px;
 }
 
 /* Второй экран прозрачный: под ним тот же огонь, что и на первом. */
@@ -1556,7 +1556,7 @@ body.menu-open .header {
 }
 
 @media (max-width: 980px) {
-  .section { scroll-margin-top: 80px; }
+  .section { scroll-margin-top: 88px; }
 
   .grid--3, .grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
@@ -1656,7 +1656,7 @@ body.menu-open .header {
   .hero__cta .btn { width: 100%; }
   .hero__aside { grid-template-columns: 1fr; gap: 18px; }
 
-  .section { padding: 56px 0; scroll-margin-top: 72px; }
+  .section { padding: 56px 0; scroll-margin-top: 88px; }
   .section-head { margin-bottom: 32px; }
 
   .grid--3, .grid--4, .grid--2 { grid-template-columns: 1fr; }
