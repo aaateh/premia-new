@@ -36,6 +36,7 @@
     var sparks = null;
     var sceneVisible = true;
     var burnVisible = false;
+    var suspended = false;
 
     video.muted = true;
     video.loop = true;
@@ -289,7 +290,8 @@
     }
 
     function shouldPlay() {
-        return ready && !blocked && wantsMotion && !document.hidden && (sceneVisible || burnVisible);
+        return ready && !blocked && wantsMotion && !suspended &&
+            !document.hidden && (sceneVisible || burnVisible);
     }
 
     function play() {
@@ -329,7 +331,7 @@
         }
 
         if (sparks) {
-            sparks.setActive(wantsMotion && !document.hidden && sceneVisible);
+            sparks.setActive(wantsMotion && !document.hidden && sceneVisible && !suspended);
         }
 
         if (shouldPlay()) {
@@ -388,6 +390,13 @@
     });
 
     document.addEventListener('visibilitychange', sync);
+
+    /* Во время прожига между секциями огонь замирает: полноэкранное видео
+       и искры не конкурируют с SVG-фильтром кромки. После паузы возвращается. */
+    window.addEventListener('scrollburn:active', function (event) {
+        suspended = !!(event.detail && event.detail.active);
+        sync();
+    });
 
     var onQueryChange = function () {
         applySource();

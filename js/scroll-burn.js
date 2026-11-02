@@ -1,8 +1,8 @@
 /* ==========================================================================
-   Scroll Burn — локальная демонстрация
-   Оригинальная техника Framer-компонента:
-   feTurbulence → feDisplacementMap → blur → порог альфы.
-   Живой SVG-фильтр на растущей заливке; кромка меняется по мере прожига.
+   Scroll Burn — прожиг между секциями.
+   Векторная кромка (SVG-путь с CSS-заливкой) во всех браузерах: она
+   стабильнее живого полноэкранного фильтра на тяжёлой странице.
+   Геометрия секций кэшируется, слой прокручивается вместе с секцией.
    ========================================================================== */
 
 (() => {
@@ -22,11 +22,12 @@
     seed: 7
   });
 
-  const IS_WEBKIT = /AppleWebKit/i.test(navigator.userAgent) &&
-    !/Chrome|Chromium|Edg|OPR|CriOS|FxiOS/i.test(navigator.userAgent);
+  /* На сайте используем векторную кромку во всех браузерах: живой
+     полноэкранный SVG-фильтр на тяжёлой странице заметно просаживает
+     плавность прокрутки. */
+  const USE_VECTOR_EDGE = true;
 
-  /* Настройки кромки для Canvas2D-версии в Safari/WebKit. */
-  const WEBKIT_DEFAULTS = Object.freeze({
+  const VECTOR_DEFAULTS = Object.freeze({
     smoothing: 0.32,
     start: -10,
     end: -100,
@@ -40,7 +41,7 @@
   /* У каждого блока свой рисунок кромки: базовый seed + смещение. */
   const blockSeed = (base, index) => base + index * 17;
 
-  const BASE = IS_WEBKIT ? { ...DEFAULTS, ...WEBKIT_DEFAULTS } : DEFAULTS;
+  const BASE = { ...DEFAULTS, ...VECTOR_DEFAULTS };
   const cfg = { ...BASE };
   let requestTick = () => {};
 
@@ -60,7 +61,7 @@
       this.progress = -1;
       this.written = -1;
       this.visible = false;
-      this.isWebkit = IS_WEBKIT;
+      this.isVector = USE_VECTOR_EDGE;
       this.edgeSvg = null;
       this.path = null;
       this.config = null;
@@ -86,8 +87,8 @@
     }
 
     build() {
-      if (this.isWebkit) {
-        this.buildWebkit();
+      if (this.isVector) {
+        this.buildVector();
         return;
       }
       const id = `burn-filter-${this.index}`;
@@ -174,7 +175,7 @@
       this.fill = fill;
     }
 
-    buildWebkit() {
+    buildVector() {
       /* В WebKit рисуем кромку простым SVG-путём: цвет задаётся тем же
          CSS-цветом, что и фон следующей секции, поэтому на стыке нет
          расхождения канваса и CSS. Слой живёт внутри `.burn` (inset:0)
@@ -213,7 +214,7 @@
       this.seed = blockSeed(config.seed, this.index);
       this.edge = Math.ceil(config.displacement / 2) + 6;
       this.written = -1;
-      if (this.isWebkit) return;
+      if (this.isVector) return;
       this.turbulence.setAttribute(
         'baseFrequency',
         `${config.frequencyX} ${config.frequencyY}`
@@ -249,7 +250,7 @@
       this.written = -1;
     }
 
-    updateWebkit(config, viewportHeight, rectTop, reducedMotion) {
+    updateVector(config, viewportHeight, rectTop, reducedMotion) {
       const H = this.height || 1;
       const W = this.width || 1;
       const startPx = (config.start / 100) * viewportHeight;
@@ -322,7 +323,7 @@
       const amp = Math.min(cfg.displacement * 0.28, 120);
       /* Шум статичный, как feTurbulence: кромка не «кипит» без скролла. */
       const t = 0;
-      const step = Math.max(2, W / 600);
+      const step = Math.max(3, W / 400);
 
       /* Низ (или верх при direction:'down') уходит за границу секции,
          чтобы на стыке с соседним блоком не было полупрозрачной кромки. */
@@ -349,13 +350,13 @@
     }
 
     arm() {
-      if (this.isWebkit || this.armed || !this.pad) return;
+      if (this.isVector || this.armed || !this.pad) return;
       this.pad.style.filter = `url(#${this.filterId})`;
       this.armed = true;
     }
 
     maybeArm(rectTop, viewportHeight) {
-      if (this.isWebkit) return;
+      if (this.isVector) return;
       const near = rectTop < viewportHeight * 1.5 &&
         rectTop + this.height > -viewportHeight;
       if (near) {
@@ -373,8 +374,8 @@
     }
 
     update(config, viewportHeight, rectTop, reducedMotion) {
-      if (this.isWebkit) {
-        return this.updateWebkit(config, viewportHeight, rectTop, reducedMotion);
+      if (this.isVector) {
+        return this.updateVector(config, viewportHeight, rectTop, reducedMotion);
       }
       this.maybeArm(rectTop, viewportHeight);
       const startPx = (config.start / 100) * viewportHeight;
@@ -449,6 +450,22 @@
   };
 
   let rafId = 0;
+  let firePaused = false;
+  let firePauseTimer = 0;
+
+  const setFirePaused = (next) => {
+    if (next === firePaused) return;
+    firePaused = next;
+    window.dispatchEvent(new CustomEvent('scrollburn:active', {
+      detail: { active: next }
+    }));
+  };
+
+  const holdFirePaused = () => {
+    setFirePaused(true);
+    clearTimeout(firePauseTimer);
+    firePauseTimer = setTimeout(() => setFirePaused(false), 260);
+  };
 
   const tick = () => {
     rafId = 0;
@@ -458,6 +475,20 @@
     for (const burn of burns) {
       if (burn.update(cfg, viewportHeight, burn.docTop - y, reducedMotion)) settling = true;
     }
+    let transition = false;
+    for (const burn of burns) {
+      if (burn.progress > 0.001 && burn.progress < 0.999) {
+        transition = true;
+        break;
+      }
+    }
+    if (transition) {
+      holdFirePaused();
+    } else {
+      clearTimeout(firePauseTimer);
+      setFirePaused(false);
+    }
+
     write(y);
     if (settling) requestTick();
   };
