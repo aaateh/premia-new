@@ -184,6 +184,9 @@ a:hover { text-decoration: none; }
   margin-left: auto;
 }
 
+/* контакты в мобильном меню — только в оверлее */
+.nav__contacts { display: none; }
+
 .nav__list {
   display: flex;
   align-items: center;
@@ -236,6 +239,8 @@ body.menu-open .header {
   top: 0;
   right: 0;
   left: 0;
+  z-index: 70;
+  background: var(--ground);
 }
 
 .burger {
@@ -1033,6 +1038,7 @@ body.menu-open .header {
 }
 
 .timeline__item {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -1061,6 +1067,23 @@ body.menu-open .header {
   color: #FFFFFF;
   font-size: 16px;
   line-height: 1.5;
+}
+
+/* вертикальные «змейки» между этапами на десктопе */
+@media (min-width: 1101px) {
+  .timeline__item + .timeline__item::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -21px;
+    width: 10px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='48' viewBox='0 0 10 48'%3E%3Cpath d='M5 0Q0 6 5 12T5 24T5 36T5 48' fill='none' stroke='%23C8C2BC' stroke-opacity='.5' stroke-width='1'/%3E%3C/svg%3E");
+    background-repeat: repeat-y;
+    background-position: left top;
+    background-size: 10px 48px;
+    pointer-events: none;
+  }
 }
 
 /* ---------- заглушки ---------- */
@@ -1113,12 +1136,22 @@ body.menu-open .header {
 /* ступенчатые карточки + таймлайн над ними */
 .awards { position: relative; }
 
+/* бесшовный стык с блоком «Ключевые даты» */
+#awards { border-top: 0; }
+
+/* линия-рельеф уходит в пустую ступенчатую зону над карточками:
+   блок не становится выше, а зазоры сверху и снизу сбалансированы */
 .awards-line {
-  margin-bottom: 22px;
+  margin-top: -85px;
+  margin-bottom: -82px;
   pointer-events: none;
 }
 
-.awards-line svg { display: block; width: 100%; height: auto; }
+.awards-line svg {
+  display: block;
+  width: 100%;
+  height: 220px;
+}
 
 /* метки-точки на контуре: по одной над каждой карточкой */
 .awards-mark {
@@ -1133,6 +1166,21 @@ body.menu-open .header {
 .awards-mark--1 { animation-delay: .3s; }
 .awards-mark--2 { animation-delay: 1.9s; }
 .awards-mark--3 { animation-delay: 3.5s; }
+
+/* белый «бегунок» вдоль контура */
+.awards-glint {
+  stroke-dasharray: 52 2000;
+  stroke-dashoffset: 0;
+  animation: awards-glint 3.2s linear infinite;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, .65));
+  opacity: .95;
+  pointer-events: none;
+}
+
+@keyframes awards-glint {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -2052; }
+}
 
 @keyframes awards-pulse {
   0%, 100% { transform: scale(1); }
@@ -1219,6 +1267,7 @@ body.menu-open .header {
   .axe img { transition: none; }
   .awards-mark--pulse,
   .awards-dot { animation: none; }
+  .awards-glint { animation: none; opacity: 0; }
 }
 
 @media (max-width: 1399px) {
@@ -1256,6 +1305,45 @@ body.menu-open .header {
   object-fit: cover;
   border-radius: var(--radius);
 }
+
+/* фото с «прожиганием»: снизу ч/б слой, сверху canvas с цветным */
+.founder__photo--ignite {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+}
+
+.founder__photo--ignite .ignite__color {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.founder__photo--ignite .ignite__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s linear;
+}
+
+.founder__photo--ignite.is-ready .ignite__canvas { opacity: 1; }
+
+/* запасной вариант: без WebGL или при reduced motion */
+.founder__photo--ignite.is-fallback .ignite__color {
+  transition: opacity .35s ease;
+}
+
+.founder__photo--ignite.is-fallback:hover .ignite__color { opacity: 1; }
+
+.founder__photo--ignite.is-static .ignite__color { opacity: 1; }
+.founder__photo--ignite.is-static .ignite__canvas { display: none; }
 
 .founder__photo--logo {
   display: grid;
@@ -1543,8 +1631,8 @@ body.menu-open .header {
   .founder { width: calc(100% - 20px); margin: 10px 10px 34px; }
 
   /* топор — у правого края над верхним текстом, частично за экраном,
-     и не занимает высоту в потоке */
-  .section--principles { overflow: hidden; }
+     и не занимает высоту в потоке; выше слоя перехода между секциями */
+  .section--principles { overflow: visible; }
   .axe {
     display: block;
     position: absolute;
@@ -1552,6 +1640,7 @@ body.menu-open .header {
     right: -40px;
     width: min(36vw, 140px);
     margin: 0;
+    z-index: 6;
   }
 }
 
@@ -1586,11 +1675,68 @@ body.menu-open .header {
   }
 
   .nav.is-open { display: flex; }
-  .nav__list { flex-direction: column; align-items: stretch; gap: 0; }
+  .nav__list { flex-direction: column; align-items: stretch; gap: 0; margin-top: auto; }
   .nav__list li { border-bottom: 1px solid var(--rule); }
-  .nav__list a { display: block; padding: 15px 0; font-size: 14px; letter-spacing: .1em; }
+  .nav__list li:first-child { border-top: 1px solid var(--rule); }
+  .nav__list a { display: block; padding: 15px 0; font-size: 14px; letter-spacing: .1em; text-align: center; }
   .nav__list a::after { display: none; }
-  .nav .btn { display: inline-flex; margin-top: 20px; }
+  .nav .btn {
+    display: inline-flex;
+    align-self: center;
+    min-width: 240px;
+    min-height: 52px;
+    height: 52px;
+    margin-top: 40px;
+    padding: 0 28px;
+    font-size: 15px;
+  }
+
+  .nav__contacts {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    margin-top: 0;
+    padding-top: 40px;
+    text-align: center;
+  }
+
+  .nav__contacts-label {
+    color: var(--accent-text);
+    font-family: var(--font-base);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    line-height: 1.3;
+    text-transform: uppercase;
+  }
+
+  .nav__mail {
+    color: var(--scene-ink);
+    font-family: var(--font-ui);
+    font-size: 16px;
+    line-height: 1.4;
+    letter-spacing: .02em;
+    text-decoration: none;
+  }
+
+  .nav__mail:hover { color: var(--accent-text); }
+
+  .nav__socials.socials {
+    margin-top: 0;
+    gap: 16px;
+    justify-content: center;
+  }
+
+  .nav__socials .socials__link {
+    width: 48px;
+    height: 48px;
+  }
+
+  .nav__socials .socials__link--tg svg { height: 32px; }
+  .nav__socials .socials__link--vk svg { height: 28px; }
+  .nav__socials .socials__link--max svg { height: 34px; }
 }
 
 @media (max-width: 900px) {
