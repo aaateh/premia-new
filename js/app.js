@@ -229,10 +229,46 @@
   var nav = document.getElementById('nav');
   if (!burger || !nav) return;
 
+  var lockedScroll = 0;
+
+  // Пока меню открыто, страница под ним не прокручивается: фиксируем body
+  // со сдвигом на текущую позицию и возвращаем её при закрытии. Одного
+  // overflow: hidden мало — на телефоне прокрутка всё равно уходит к странице.
+  function lockScroll() {
+    lockedScroll = window.pageYOffset || document.documentElement.scrollTop || 0;
+    document.documentElement.classList.add('menu-open');
+    document.body.style.position = 'fixed';
+    document.body.style.top = -lockedScroll + 'px';
+    document.body.style.right = '0';
+    document.body.style.left = '0';
+    document.body.style.width = '100%';
+  }
+
+  function unlockScroll() {
+    document.documentElement.classList.remove('menu-open');
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.right = '';
+    document.body.style.left = '';
+    document.body.style.width = '';
+
+    // на сайте включён scroll-behavior: smooth — возвращаем позицию сразу,
+    // без анимации, иначе прокрутка «доезжает» из нуля
+    var html = document.documentElement;
+    var smooth = html.style.scrollBehavior;
+    html.style.scrollBehavior = 'auto';
+    void document.body.offsetHeight;
+    window.scrollTo(0, lockedScroll);
+    html.style.scrollBehavior = smooth;
+  }
+
   function setMenu(open) {
+    if (open === nav.classList.contains('is-open')) return;
     nav.classList.toggle('is-open', open);
     burger.setAttribute('aria-expanded', open ? 'true' : 'false');
     document.body.classList.toggle('menu-open', open);
+    if (open) lockScroll();
+    else unlockScroll();
   }
 
   burger.addEventListener('click', function () {

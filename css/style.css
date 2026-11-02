@@ -232,6 +232,13 @@ a:hover { text-decoration: none; }
 
 body.menu-open { overflow: hidden; }
 
+/* Меню открыто — блокируем прокрутку самой страницы.
+   Класс ставится и на html: скроллером в документе выступает он, а не body. */
+html.menu-open {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 /* при открытом меню body становится скролл-контейнером и ломает sticky —
    фиксируем шапку, чтобы логотип и кнопка закрытия оставались на месте */
 body.menu-open .header {
@@ -1182,6 +1189,12 @@ body.menu-open .header {
   to { stroke-dashoffset: -2052; }
 }
 
+/* вертикальный бегунок в мобильной раскладке */
+@keyframes awards-glint-mobile {
+  from { top: 12px; }
+  to { top: calc(100% - 84px); }
+}
+
 @keyframes awards-pulse {
   0%, 100% { transform: scale(1); }
   9% { transform: scale(2.2); }
@@ -1268,6 +1281,7 @@ body.menu-open .header {
   .awards-mark--pulse,
   .awards-dot { animation: none; }
   .awards-glint { animation: none; opacity: 0; }
+  .awards-grid::after { animation: none; opacity: 0; }
 }
 
 @media (max-width: 1399px) {
@@ -1827,9 +1841,24 @@ body.menu-open .header {
     position: absolute;
     top: 12px;
     bottom: 12px;
-    left: 6px;
-    width: 1px;
-    background: var(--rule-strong);
+    left: 5.5px;
+    width: 2px;
+    background: var(--brand-accent);
+  }
+  /* белый «бегунок» по вертикальной линии — как на десктопе.
+     Медленнее, чем на десктопе: линия короче, иначе он проскакивал бы
+     незаметно. Идёт строго по линии, не заезжая на заголовок. */
+  .awards-grid::after {
+    content: "";
+    position: absolute;
+    left: 5.5px;
+    top: 12px;
+    width: 2px;
+    height: 72px;
+    background: linear-gradient(to bottom, transparent, #fff 30%, #fff 70%, transparent);
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, .65));
+    animation: awards-glint-mobile 9s linear infinite;
+    pointer-events: none;
   }
   .awards-dot {
     display: block;
