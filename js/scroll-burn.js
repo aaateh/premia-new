@@ -30,6 +30,9 @@
   const MASK_MAX_WIDTH = 2400;
   const MASK_SCALE_MAX = 1;
 
+  // Несколько разных кромок: у каждого перехода свой рисунок.
+  const MASK_VARIANTS = 6;
+
   const geometryFromConfig = (config, sectionWidth) => {
     const pad = Math.max(300, config.displacement + 80);
     const solidPart = Math.max(160, config.displacement + 120);
@@ -86,7 +89,7 @@
       this.timer = 0;
       this.token = 0;
       this.ready = false;
-      this.maskCanvas = null;
+      this.masks = [];
       this.mw = 0;
       this.mh = 0;
     }
@@ -114,23 +117,33 @@
       const scale = Math.min(MASK_SCALE_MAX, MASK_MAX_WIDTH / geometry.bandWidth);
       const mw = Math.max(2, Math.round(geometry.bandWidth * scale));
       const mh = Math.max(2, Math.round(geometry.bandHeight * scale));
-      const svg = buildMaskSvg(this.config, geometry, mw, mh, scale);
+      const count = Math.min(MASK_VARIANTS, Math.max(1, this.burns.length));
 
       try {
-        const image = await loadImage('data:image/svg+xml;base64,' + btoa(svg));
+        // Каждый вариант — свой seed шума, поэтому кромки не повторяются.
+        const masks = await Promise.all(
+          Array.from({ length: count }, async (_, index) => {
+            const variant = { ...this.config, seed: this.config.seed + index * 17 };
+            const svg = buildMaskSvg(variant, geometry, mw, mh, scale);
+            const image = await loadImage('data:image/svg+xml;base64,' + btoa(svg));
+            const canvas = document.createElement('canvas');
+            canvas.width = mw;
+            canvas.height = mh;
+            canvas.getContext('2d').drawImage(image, 0, 0);
+            return canvas;
+          })
+        );
         if (token !== this.token) return;
 
-        const canvas = document.createElement('canvas');
-        canvas.width = mw;
-        canvas.height = mh;
-        canvas.getContext('2d').drawImage(image, 0, 0);
-        if (token !== this.token) return;
-
-        this.maskCanvas = canvas;
+        this.masks = masks;
         this.mw = mw;
         this.mh = mh;
         this.ready = true;
-        this.burns.forEach((burn) => burn.setMask(canvas, mw, mh));
+        this.burns.forEach((burn, index) => {
+          burn.setMask(masks[index % masks.length], mw, mh);
+        });
+        // Тонированные копии уже лежат в canvas каждого перехода.
+        this.masks = [];
         requestTick();
       } catch (error) {
         // Без кромки остаётся простой прямой прожиг — эффект не ломается.
@@ -146,7 +159,7 @@
   class Burn {
     constructor(el, index) {
       this.el = el;
-      this.color = el.dataset.color || '#FFFFFF';
+      this.color = this.resolveColor(el);
       this.index = index;
       this.progress = -1;
       this.written = -1;
@@ -162,6 +175,18 @@
       this.bandHeight = 640;
       this.build();
       this.measure();
+    }
+
+    // Цвет прожига = реальный фон следующей секции, а не «примерный» литерал.
+    resolveColor(el) {
+      const host = el.parentElement;
+      const next = host ? host.nextElementSibling : null;
+      if (next) {
+        const bg = getComputedStyle(next).backgroundColor;
+        if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') return bg;
+      }
+      if (el.dataset.color) return el.dataset.color;
+      return getComputedStyle(document.body).backgroundColor || '#FFFFFF';
     }
 
     build() {
@@ -224,7 +249,7 @@
 
       // Разные экраны получают зеркальные варианты кромки, а режим «вниз» —
       // перевёрнутую по вертикали. Так один кэш даёт разные рисунки.
-      const flipX = this.index % 2 ? -1 : 1;
+      const flipX = Math.floor(this.index / MASK_VARIANTS) % 2 ? -1 : 1;
       const flipY = config.direction === 'down' ? -1 : 1;
       this.bandInner.style.transform = `scale(${flipX}, ${flipY})`;
 
