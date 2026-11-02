@@ -1,12 +1,14 @@
 /* ==========================================================================
    Scroll Burn — прожиг между секциями.
-   Маски кромки считаются заранее (SVG-фильтр → PNG-альфа) и кэшируются.
-   В кадре двигаются только готовая маска и цветной CSS-слой:
-   фильтр и canvas не участвуют в скролле.
+   Векторная кромка (SVG-путь с CSS-заливкой) во всех браузерах: она
+   стабильнее живого полноэкранного фильтра на тяжёлой странице.
+   Геометрия секций кэшируется, слой прокручивается вместе с секцией.
    ========================================================================== */
 
 (() => {
   'use strict';
+
+  const NS = 'http://www.w3.org/2000/svg';
 
   const DEFAULTS = Object.freeze({
     direction: 'up',
@@ -20,138 +22,38 @@
     seed: 7
   });
 
-  const cfg = { ...DEFAULTS };
+  /* Safari/WebKit: полноэкранный живой SVG-фильтр не отрисовывается,
+     поэтому там векторная кромка. Chrome остаётся на живом фильтре. */
+  const USE_VECTOR_EDGE = /AppleWebKit/i.test(navigator.userAgent) &&
+    !/Chrome|Chromium|Edg|OPR|CriOS|FxiOS/i.test(navigator.userAgent);
+
+  const VECTOR_DEFAULTS = Object.freeze({
+    smoothing: 0.32,
+    start: 0,
+    end: -100,
+    displacement: 310,
+    frequencyX: 0.008,
+    frequencyY: 0.002,
+    octaves: 5,
+    seed: 8
+  });
+
+  /* У каждого блока свой рисунок кромки: базовый seed + смещение. */
+  const blockSeed = (base, index) => base + index * 17;
+
+  const BASE = USE_VECTOR_EDGE
+    ? { ...DEFAULTS, ...VECTOR_DEFAULTS }
+    : DEFAULTS;
+  const cfg = { ...BASE };
   let requestTick = () => {};
 
   const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 
-  // Ограничиваем размер кэша кромки, чтобы генерация не была тяжёлой.
-  const MASK_MAX_WIDTH = 2400;
-  const MASK_SCALE_MAX = 1;
-
-  // Как в демо: одна кромка на все переходы, чётные/нечётные зеркалятся.
-  const MASK_VARIANTS = 6;
-
-  const geometryFromConfig = (config, sectionWidth) => {
-    const pad = Math.max(300, config.displacement + 80);
-    const solidPart = Math.max(160, config.displacement + 120);
-    return {
-      padX: pad,
-      padY: pad,
-      solidPart,
-      bandHeight: pad + solidPart,
-      bandWidth: Math.max(1, sectionWidth) + pad * 2,
-      edge: Math.ceil(config.displacement / 2) + 6
-    };
+  const svgEl = (name, attrs = {}) => {
+    const el = document.createElementNS(NS, name);
+    for (const [key, value] of Object.entries(attrs)) el.setAttribute(key, value);
+    return el;
   };
-
-  const buildMaskSvg = (config, geometry, mw, mh, scale) => {
-    const frequencyX = config.frequencyX / scale;
-    const frequencyY = config.frequencyY / scale;
-    const displacement = config.displacement * scale;
-    const preBlur = 1.8 * scale;
-    const postBlur = 0.4 * scale;
-    const sourceTop = geometry.padY * scale;
-    const sourceHeight = geometry.solidPart * scale;
-
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="${mw}" height="${mh}">
-      <defs>
-        <filter id="f" x="-10%" y="-10%" width="120%" height="120%">
-          <feTurbulence type="fractalNoise" baseFrequency="${frequencyX} ${frequencyY}" numOctaves="${config.octaves}" seed="${config.seed}" result="noise"/>
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="${displacement}" xChannelSelector="R" yChannelSelector="G" result="displaced"/>
-          <feGaussianBlur in="displaced" stdDeviation="${preBlur}" result="presmooth"/>
-          <feComponentTransfer in="presmooth" result="cut">
-            <feFuncA type="discrete" tableValues="0 0 0 0 0 1 1 1 1 1"/>
-          </feComponentTransfer>
-          <feGaussianBlur in="cut" stdDeviation="${postBlur}"/>
-        </filter>
-      </defs>
-      <rect x="0" y="${sourceTop}" width="${mw}" height="${sourceHeight}" fill="#FFFFFF" filter="url(#f)"/>
-    </svg>`;
-  };
-
-  const loadImage = (src) => new Promise((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = reject;
-    image.src = src;
-  });
-
-  /* ------------------------------------------------------------------ */
-  /* Общий кэш кромки                                                    */
-  /* ------------------------------------------------------------------ */
-
-  class MaskStore {
-    constructor(config, burns) {
-      this.config = config;
-      this.burns = burns;
-      this.timer = 0;
-      this.token = 0;
-      this.ready = false;
-      this.masks = [];
-      this.mw = 0;
-      this.mh = 0;
-    }
-
-    start() {
-      // Считаем маски после первого кадра, чтобы не задерживать загрузку.
-      setTimeout(() => this.generate(), 400);
-    }
-
-    schedule(delay = 180, clear = false) {
-      clearTimeout(this.timer);
-      this.token++;
-      this.ready = false;
-      if (clear) this.burns.forEach((burn) => burn.clearMask());
-      this.timer = setTimeout(() => this.generate(), delay);
-    }
-
-    async generate() {
-      const token = ++this.token;
-      const first = this.burns[0];
-      const width = first
-        ? first.el.clientWidth
-        : (document.documentElement.clientWidth || window.innerWidth);
-      const geometry = geometryFromConfig(this.config, width);
-      const scale = Math.min(MASK_SCALE_MAX, MASK_MAX_WIDTH / geometry.bandWidth);
-      const mw = Math.max(2, Math.round(geometry.bandWidth * scale));
-      const mh = Math.max(2, Math.round(geometry.bandHeight * scale));
-      const count = Math.min(MASK_VARIANTS, Math.max(1, this.burns.length));
-
-      try {
-        // Каждый вариант — свой seed шума, поэтому кромки не повторяются.
-        const masks = await Promise.all(
-          Array.from({ length: count }, async (_, index) => {
-            const variant = { ...this.config, seed: this.config.seed + index * 17 };
-            const svg = buildMaskSvg(variant, geometry, mw, mh, scale);
-            const image = await loadImage('data:image/svg+xml;base64,' + btoa(svg));
-            const canvas = document.createElement('canvas');
-            canvas.width = mw;
-            canvas.height = mh;
-            canvas.getContext('2d').drawImage(image, 0, 0);
-            return canvas;
-          })
-        );
-        if (token !== this.token) return;
-
-        this.masks = masks;
-        this.mw = mw;
-        this.mh = mh;
-        this.ready = true;
-        this.burns.forEach((burn) => {
-          burn.setMask(masks[burn.index % masks.length], mw, mh, masks);
-        });
-        requestTick();
-      } catch (error) {
-        // Без кромки остаётся простой прямой прожиг — эффект не ломается.
-        this.ready = false;
-      }
-    }
-  }
-
-  /* ------------------------------------------------------------------ */
-  /* Прожиг                                                              */
-  /* ------------------------------------------------------------------ */
 
   class Burn {
     constructor(el, index) {
@@ -160,27 +62,24 @@
       this.index = index;
       this.progress = -1;
       this.written = -1;
-      this.solidVisible = false;
-      this.bandVisible = false;
-      this.maskReady = false;
+      this.visible = false;
+      this.isVector = USE_VECTOR_EDGE;
+      this.edgeSvg = null;
+      this.path = null;
+      this.config = null;
+      this.armed = false;
+      this.seed = blockSeed(cfg.seed, index);
       this.docTop = 0;
       this.height = 0;
+      this.width = 0;
+      this.v = 300;
       this.edge = 6;
-      this.padX = 300;
-      this.padY = 300;
-      this.solidPart = 340;
-      this.bandHeight = 640;
-      this.maskSources = null;
-      this.flowTime = 0;
-      this.flowDone = false;
       this.build();
       this.measure();
     }
 
-    // Цвет прожига = реальный фон следующей секции, а не «примерный» литерал.
     resolveColor(el) {
-      const host = el.parentElement;
-      const next = host ? host.nextElementSibling : null;
+      const next = el.parentElement ? el.parentElement.nextElementSibling : null;
       if (next) {
         const bg = getComputedStyle(next).backgroundColor;
         if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') return bg;
@@ -190,158 +89,310 @@
     }
 
     build() {
-      // Простая заливка: растягивается по скроллу, без фильтра.
-      const solid = document.createElement('div');
-      solid.className = 'burn__solid';
-      solid.style.background = this.color;
-      solid.style.visibility = 'hidden';
+      if (this.isVector) {
+        this.buildVector();
+        return;
+      }
+      const id = `burn-filter-${this.index}`;
+      this.filterId = id;
 
-      // Готовая canvas-кромка: при скролле только двигается.
-      const band = document.createElement('div');
-      band.className = 'burn__band';
-      band.style.visibility = 'hidden';
+      const filter = svgEl('filter', {
+        id,
+        x: '0',
+        y: '0',
+        width: '100%',
+        height: '100%',
+        'color-interpolation-filters': 'sRGB'
+      });
 
-      const bandInner = document.createElement('div');
-      bandInner.className = 'burn__band-inner';
+      this.turbulence = svgEl('feTurbulence', {
+        type: 'fractalNoise',
+        baseFrequency: `${cfg.frequencyX} ${cfg.frequencyY}`,
+        numOctaves: String(cfg.octaves),
+        seed: String(blockSeed(cfg.seed, this.index)),
+        result: 'noise'
+      });
 
-      const bandImage = document.createElement('div');
-      bandImage.className = 'burn__band-image';
+      this.displacement = svgEl('feDisplacementMap', {
+        in: 'SourceGraphic',
+        in2: 'noise',
+        scale: String(cfg.displacement),
+        xChannelSelector: 'R',
+        yChannelSelector: 'G',
+        result: 'displaced'
+      });
 
-      bandInner.appendChild(bandImage);
-      band.appendChild(bandInner);
-      this.el.append(solid, band);
+      const preSmooth = svgEl('feGaussianBlur', {
+        in: 'displaced',
+        stdDeviation: '1.8',
+        result: 'presmooth'
+      });
 
-      this.solid = solid;
-      this.band = band;
-      this.bandInner = bandInner;
-      this.bandImage = bandImage;
+      const cut = svgEl('feComponentTransfer', {
+        in: 'presmooth',
+        result: 'cut'
+      });
+      cut.appendChild(svgEl('feFuncA', {
+        type: 'discrete',
+        tableValues: '0 0 0 0 0 1 1 1 1 1'
+      }));
+
+      const flood = svgEl('feFlood', {
+        'flood-color': this.color,
+        result: 'ink'
+      });
+
+      const tint = svgEl('feComposite', {
+        in: 'ink',
+        in2: 'cut',
+        operator: 'in',
+        result: 'tinted'
+      });
+
+      const postBlur = svgEl('feGaussianBlur', {
+        in: 'tinted',
+        stdDeviation: '0.4'
+      });
+
+      filter.append(this.turbulence, this.displacement, preSmooth, cut, flood, tint, postBlur);
+
+      const defs = svgEl('defs');
+      defs.appendChild(filter);
+
+      const svg = svgEl('svg', { width: '1', height: '1', 'aria-hidden': 'true' });
+      svg.classList.add('burn__defs');
+      svg.appendChild(defs);
+
+      const pad = document.createElement('div');
+      pad.className = 'burn__pad';
+
+      const fill = document.createElement('div');
+      fill.className = 'burn__fill';
+      fill.style.background = this.color;
+
+      pad.appendChild(fill);
+      this.el.append(svg, pad);
+
+      this.pad = pad;
+      this.fill = fill;
+    }
+
+    buildVector() {
+      /* В WebKit рисуем кромку простым SVG-путём: цвет задаётся тем же
+         CSS-цветом, что и фон следующей секции, поэтому на стыке нет
+         расхождения канваса и CSS. Слой живёт внутри `.burn` (inset:0)
+         и прокручивается вместе с секцией. */
+      const svg = svgEl('svg', {
+        width: '100%',
+        height: '100%',
+        'aria-hidden': 'true'
+      });
+      svg.classList.add('burn__edge');
+      svg.style.visibility = 'hidden';
+      const path = svgEl('path', { fill: this.color });
+      svg.appendChild(path);
+      this.el.appendChild(svg);
+      this.edgeSvg = svg;
+      this.path = path;
     }
 
     measure() {
-      // Короткая секция = «экран» целиком: прожиг ровно по ней, без нахлёста
-      // на соседнюю секцию. Высокая — только нижние 100svh.
+      // Высокая секция: слой прижат к нижним 100svh; короткая — целиком.
       const host = this.el.parentElement;
       const viewport = window.innerHeight || 1;
       if (host) {
         const hostHeight = host.getBoundingClientRect().height;
         this.el.classList.toggle('burn--viewport', hostHeight > viewport);
       }
-
       const rect = this.el.getBoundingClientRect();
       this.height = rect.height;
+      this.width = rect.width;
       this.docTop = rect.top + (window.scrollY || window.pageYOffset || 0);
+      this.written = -1;
     }
 
     apply(config) {
-      const geometry = geometryFromConfig(config, this.el.clientWidth);
-      this.padX = geometry.padX;
-      this.padY = geometry.padY;
-      this.solidPart = geometry.solidPart;
-      this.bandHeight = geometry.bandHeight;
-      this.edge = geometry.edge;
+      this.config = config;
+      this.seed = blockSeed(config.seed, this.index);
+      this.edge = Math.ceil(config.displacement / 2) + 6;
+      this.written = -1;
+      if (this.isVector) return;
+      this.turbulence.setAttribute(
+        'baseFrequency',
+        `${config.frequencyX} ${config.frequencyY}`
+      );
+      this.turbulence.setAttribute('numOctaves', String(config.octaves));
+      this.turbulence.setAttribute('seed', String(this.seed));
+      this.displacement.setAttribute('scale', String(config.displacement));
 
-      const solidStyle = this.solid.style;
-      solidStyle.height = '100%';
-      solidStyle.transformOrigin = config.direction === 'up' ? '50% 100%' : '50% 0%';
+      const padInset = Math.max(300, config.displacement + 80);
+      const edgeInset = Math.ceil(config.displacement / 2) + 6;
+      this.v = padInset;
+      this.edge = edgeInset;
+
+      const padStyle = this.pad.style;
+      padStyle.top = `${-padInset}px`;
+      padStyle.right = `${-padInset}px`;
+      padStyle.bottom = `${-padInset}px`;
+      padStyle.left = `${-padInset}px`;
+
+      const fillStyle = this.fill.style;
+      fillStyle.height = `calc(100% - ${padInset * 2}px)`;
+
       if (config.direction === 'up') {
-        solidStyle.top = 'auto';
-        solidStyle.bottom = `${-this.edge}px`;
+        fillStyle.top = 'auto';
+        fillStyle.bottom = `${padInset - edgeInset}px`;
+        fillStyle.transformOrigin = '50% 100%';
       } else {
-        solidStyle.top = `${-this.edge}px`;
-        solidStyle.bottom = 'auto';
+        fillStyle.top = `${padInset - edgeInset}px`;
+        fillStyle.bottom = 'auto';
+        fillStyle.transformOrigin = '50% 0%';
       }
-
-      const bandStyle = this.band.style;
-      bandStyle.left = `${-this.padX}px`;
-      bandStyle.width = `calc(100% + ${this.padX * 2}px)`;
-      bandStyle.height = `${this.bandHeight}px`;
-
-      // Разные экраны получают зеркальные варианты кромки, а режим «вниз» —
-      // перевёрнутую по вертикали. Так один кэш даёт разные рисунки.
-      const flipX = this.index % 2 ? -1 : 1;
-      const flipY = config.direction === 'down' ? -1 : 1;
-      this.bandInner.style.transform = `scale(${flipX}, ${flipY})`;
 
       this.written = -1;
     }
 
-    setMask(maskCanvas, mw, mh, sources) {
-      this.maskSources = sources || [maskCanvas];
-      this.flowTime = 0;
-      this.flowDone = false;
-      /* Маска хранится как PNG-альфа, а цвет даёт CSS-слой: цвет
-         гарантированно совпадает с фоном следующей секции. */
-      if (!maskCanvas.__maskUrl) {
-        maskCanvas.__maskUrl = maskCanvas.toDataURL('image/png');
-      }
-      const url = `url("${maskCanvas.__maskUrl}")`;
-      const image = this.bandImage;
-      image.style.background = this.color;
-      image.style.webkitMaskImage = url;
-      image.style.maskImage = url;
-      image.style.webkitMaskSize = '100% 100%';
-      image.style.maskSize = '100% 100%';
-      image.style.webkitMaskRepeat = 'no-repeat';
-      image.style.maskRepeat = 'no-repeat';
-      image.style.webkitMaskPosition = '0 0';
-      image.style.maskPosition = '0 0';
-      image.style.maskMode = 'alpha';
-      image.style.webkitMaskSourceType = 'alpha';
-      this.maskReady = true;
-    }
-
-    // Живая кромка: готовые маски перетекают по прогрессу, плюс лёгкий
-    // временной дрейф. Два drawImage на кадр, без SVG-фильтра в скролле.
-    flow(next, time, reduced) {
-      const sources = this.maskSources;
-      if (!sources || !sources.length || !this.maskReady) return;
-      if (!reduced && this.flowTime && time - this.flowTime < 33) return;
-      this.flowTime = time;
-
-      const n = sources.length;
-      const pos = Math.min(n - 1, Math.max(0, next * (n - 1)));
-      const i = Math.floor(pos);
-      const j = Math.min(n - 1, i + 1);
-      const base = pos - i;
-      const wave = reduced ? 0 : Math.sin(time * 0.0009 + this.index * 1.7) * 0.14;
-      const mix = Math.max(0, Math.min(1, base + wave));
-      const dy = reduced ? 0 : Math.sin(time * 0.0007 + this.index) * 6;
-
-      const canvas = this.canvas;
-      const ctx = canvas.getContext('2d');
-      const w = canvas.width;
-      const h = canvas.height;
-
-      ctx.clearRect(0, 0, w, h);
-      ctx.globalAlpha = 1 - mix;
-      ctx.drawImage(sources[i], 0, dy);
-      if (j !== i) {
-        ctx.globalAlpha = mix;
-        ctx.drawImage(sources[j], 0, -dy);
-      }
-      ctx.globalAlpha = 1;
-
-      ctx.globalCompositeOperation = 'source-in';
-      ctx.fillStyle = this.color;
-      ctx.fillRect(0, 0, w, h);
-      ctx.globalCompositeOperation = 'source-over';
-    }
-
-    clearMask() {
-      this.maskReady = false;
-      if (this.bandVisible) {
-        this.band.style.visibility = 'hidden';
-        this.bandVisible = false;
-      }
-    }
-
-    update(config, viewportHeight, rectTop, reducedMotion) {
+    updateVector(config, viewportHeight, rectTop, reducedMotion) {
+      const H = this.height || 1;
+      const W = this.width || 1;
+      /* Короткая секция: начинаем, когда следующий блок уже входит
+         в нижнюю кромку экрана, иначе прожиг появляется слишком поздно. */
       const shortStart = this.el.classList.contains('burn--viewport')
         ? 0
         : Math.max(0, viewportHeight - this.height);
       const startPx = (config.start / 100) * viewportHeight + shortStart;
-      const burnHeight = this.height || viewportHeight;
-      const endPx = (config.end / 100) * burnHeight - (this.edge + config.displacement / 2 + 8);
+      const endPx = (config.end / 100) * (this.height || viewportHeight) -
+        (this.edge + config.displacement / 2 + 8);
+      const begin = this.docTop > endPx + 1
+        ? Math.min(startPx, this.docTop)
+        : startPx;
+      const target = clamp((begin - rectTop) / ((begin - endPx) || 1), 0, 1);
+
+      let next;
+      if (reducedMotion || config.smoothing <= 0) {
+        next = target;
+      } else if (this.progress < 0) {
+        next = target;
+      } else {
+        next = this.progress + (target - this.progress) * Math.min(1, config.smoothing);
+        if (Math.abs(target - next) < 0.0005) next = target;
+      }
+      this.progress = next;
+      const settling = Math.abs(next - target) > 0.0005;
+
+      const show = next > 0.0005;
+      if (show !== this.visible) {
+        this.visible = show;
+        this.edgeSvg.style.visibility = show ? 'visible' : 'hidden';
+        this.written = -1;
+      }
+      if (!show) return settling;
+      /* Секция вне экрана — рисовать нечего. */
+      if (rectTop + H <= 0 || rectTop >= viewportHeight) return settling;
+      if (this.written !== next) {
+        this.draw(next, W, H);
+        this.written = next;
+      }
+      return settling;
+    }
+
+    hash(n) {
+      const x = Math.sin(n * 127.1 + this.seed * 311.7) * 43758.5453;
+      return x - Math.floor(x);
+    }
+
+    noise(x, t, octaves, freq) {
+      let value = 0;
+      let amplitude = 0.5;
+      let total = 0;
+      let f = freq;
+      for (let o = 0; o < octaves; o++) {
+        const pos = x * f + t + this.seed * 0.37 + o * 19;
+        const cell = Math.floor(pos);
+        const frac = pos - cell;
+        const smooth = frac * frac * (3 - 2 * frac);
+        const a = this.hash(cell);
+        const b = this.hash(cell + 1);
+        value += (a + (b - a) * smooth - 0.5) * amplitude;
+        total += amplitude;
+        f *= 2.1;
+        /* Верхние октавы слабее, иначе край получается «пилой». */
+        amplitude *= 0.42;
+      }
+      return total ? (value / total) * 2 : 0;
+    }
+
+    draw(p, W, H) {
+      const cfg = this.config;
+      if (!cfg || !this.path) return;
+      const up = cfg.direction === 'up';
+      const edge = up ? H * (1 - p) + this.edge : p * H - this.edge;
+      const amp = Math.min(cfg.displacement * 0.28, 120);
+      /* Шум статичный, как feTurbulence: кромка не «кипит» без скролла. */
+      const t = 0;
+      const step = Math.max(3, W / 400);
+
+      /* Низ (или верх при direction:'down') уходит за границу секции,
+         чтобы на стыке с соседним блоком не было полупрозрачной кромки. */
+      const solid = up ? H + 2 : -2;
+
+      const yAt = (x) => {
+        const n = this.noise(x, t, cfg.octaves, cfg.frequencyX);
+        const fine = this.noise(x * 3.1 + 17.3, t * 1.6, 2, cfg.frequencyX * 6) * amp * 0.08;
+        return edge + n * amp + fine;
+      };
+
+      const pts = [];
+      for (let x = 0; x < W; x += step) pts.push([x, yAt(x)]);
+      pts.push([W, yAt(W)]);
+      /* Мягкое сглаживание, как pre-blur в SVG-фильтре. */
+      for (let i = 1; i < pts.length - 1; i++) {
+        pts[i][1] = pts[i - 1][1] * 0.25 + pts[i][1] * 0.5 + pts[i + 1][1] * 0.25;
+      }
+
+      let d = `M 0 ${solid.toFixed(1)}`;
+      for (const [x, y] of pts) d += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+      d += ` L ${W.toFixed(1)} ${solid.toFixed(1)} Z`;
+      this.path.setAttribute('d', d);
+    }
+
+    arm() {
+      if (this.isVector || this.armed || !this.pad) return;
+      this.pad.style.filter = `url(#${this.filterId})`;
+      this.armed = true;
+    }
+
+    maybeArm(rectTop, viewportHeight) {
+      if (this.isVector) return;
+      const near = rectTop < viewportHeight * 1.5 &&
+        rectTop + this.height > -viewportHeight;
+      if (near) {
+        if (!this.armed) this.arm();
+        return;
+      }
+      /* Далёкие переходы не держат живой фильтр в памяти. */
+      if (this.armed && (
+        rectTop > viewportHeight * 2.5 ||
+        rectTop + this.height < -viewportHeight * 2.5
+      )) {
+        this.pad.style.filter = 'none';
+        this.armed = false;
+      }
+    }
+
+    update(config, viewportHeight, rectTop, reducedMotion) {
+      if (this.isVector) {
+        return this.updateVector(config, viewportHeight, rectTop, reducedMotion);
+      }
+      this.maybeArm(rectTop, viewportHeight);
+      /* Короткая секция: начинаем, когда следующий блок уже входит
+         в нижнюю кромку экрана, иначе прожиг появляется слишком поздно. */
+      const shortStart = this.el.classList.contains('burn--viewport')
+        ? 0
+        : Math.max(0, viewportHeight - this.height);
+      const startPx = (config.start / 100) * viewportHeight + shortStart;
+      const endPx = (config.end / 100) * (this.height || viewportHeight) -
+        (this.edge + config.displacement / 2 + 8);
 
       const begin = this.docTop > endPx + 1
         ? Math.min(startPx, this.docTop)
@@ -362,45 +413,30 @@
       this.progress = next;
       const settling = Math.abs(next - target) > 0.0005;
 
-      const solidShow = next > 0.0005;
-      if (solidShow !== this.solidVisible) {
-        this.solidVisible = solidShow;
-        this.solid.style.visibility = solidShow ? 'visible' : 'hidden';
+      const show = next > 0.0005;
+      if (show !== this.visible) {
+        this.visible = show;
+        this.pad.style.visibility = show ? 'visible' : 'hidden';
       }
-
-      const bandShow = solidShow && this.maskReady;
-      if (bandShow !== this.bandVisible) {
-        this.bandVisible = bandShow;
-        this.band.style.visibility = bandShow ? 'visible' : 'hidden';
-      }
-
-      if (!solidShow) return settling;
+      if (!show) return settling;
 
       if (Math.abs(next - this.written) > 0.0002 || next === 0 || next === 1) {
-        this.solid.style.transform = `translate3d(0, 0, 0) scaleY(${next.toFixed(4)})`;
+        this.fill.style.transform = `translate3d(0, 0, 0) scaleY(${next.toFixed(4)})`;
         this.written = next;
       }
-
-      if (!bandShow) return settling;
-
-      const sectionHeight = this.height || viewportHeight;
-      const edgeY = config.direction === 'up'
-        ? sectionHeight * (1 - next) + this.edge
-        : next * sectionHeight - this.edge;
-      const bandY = config.direction === 'up'
-        ? edgeY - this.padY
-        : edgeY - this.solidPart;
-
-      // Кэшированная маска: в кадре только сдвиг полосы, без canvas-перерисовки.
-      this.band.style.transform = `translate3d(0, ${bandY.toFixed(2)}px, 0)`;
 
       return settling;
     }
   }
 
+  let started = false;
+
+  const start = () => {
+    if (started) return;
+    started = true;
+
   const burnNodes = [...document.querySelectorAll('[data-burn]')];
   const burns = burnNodes.map((el, index) => new Burn(el, index));
-  const maskStore = new MaskStore(cfg, burns);
 
   const reducedQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
   let reducedMotion = reducedQuery.matches;
@@ -413,12 +449,12 @@
 
   const applyAll = () => burns.forEach((burn) => burn.apply(cfg));
 
-  const write = () => {
+  const write = (y) => {
     const max = document.documentElement.scrollHeight - window.innerHeight;
-    const ratio = max > 0 ? clamp(window.scrollY / max, 0, 1) : 0;
+    const ratio = max > 0 ? clamp(y / max, 0, 1) : 0;
     if (scrollbar) scrollbar.style.transform = `scaleX(${ratio.toFixed(4)})`;
 
-    const scrolled = window.scrollY > 40;
+    const scrolled = y > 40;
     if (scrolled !== scrolledClass) {
       document.body.classList.toggle('is-scrolled', scrolled);
       scrolledClass = scrolled;
@@ -448,10 +484,9 @@
     const viewportHeight = window.innerHeight || 1;
     const y = window.scrollY || 0;
     let settling = false;
-    burns.forEach((burn) => {
+    for (const burn of burns) {
       if (burn.update(cfg, viewportHeight, burn.docTop - y, reducedMotion)) settling = true;
-    });
-
+    }
     let transition = false;
     for (const burn of burns) {
       if (burn.progress > 0.001 && burn.progress < 0.999) {
@@ -466,7 +501,7 @@
       setFirePaused(false);
     }
 
-    write();
+    write(y);
     if (settling) requestTick();
   };
 
@@ -476,7 +511,6 @@
 
   applyAll();
   burns.forEach((burn) => burn.measure());
-  maskStore.start();
   requestTick();
 
   window.addEventListener('scroll', requestTick, { passive: true });
@@ -492,8 +526,6 @@
 
   window.addEventListener('resize', () => {
     burns.forEach((burn) => burn.measure());
-    applyAll();
-    maskStore.schedule(200, true);
     requestTick();
   });
 
@@ -501,6 +533,7 @@
     burns.forEach((burn) => burn.measure());
     requestTick();
   });
+
 
   if (document.fonts?.ready) {
     document.fonts.ready.then(() => {
@@ -519,100 +552,112 @@
   const closeButton = document.getElementById('labClose');
   const resetButton = document.getElementById('labReset');
 
-  // Пульт — необязательная часть демо. Без его разметки скрипт работает как есть.
   if (lab && panel && toggle && closeButton && resetButton) {
-  const MASK_KEYS = new Set(['displacement', 'frequencyX', 'frequencyY', 'octaves', 'seed']);
-  const inputs = [...document.querySelectorAll('input[data-key]')];
-  const dirButtons = [...document.querySelectorAll('[data-dir]')];
+    const inputs = [...document.querySelectorAll('input[data-key]')];
+    const dirButtons = [...document.querySelectorAll('[data-dir]')];
 
-  const formats = {
-    smoothing: (v) => Number(v).toFixed(2),
-    start: (v) => `${Math.round(v)}%`.replace('-', '−'),
-    end: (v) => `${Math.round(v)}%`.replace('-', '−'),
-    displacement: (v) => `${Math.round(v)} px`,
-    frequencyX: (v) => Number(v).toFixed(3),
-    frequencyY: (v) => Number(v).toFixed(3),
-    octaves: (v) => String(Math.round(v)),
-    seed: (v) => String(Math.round(v))
-  };
+    const formats = {
+      smoothing: (v) => Number(v).toFixed(2),
+      start: (v) => `${Math.round(v)}%`.replace('-', '−'),
+      end: (v) => `${Math.round(v)}%`.replace('-', '−'),
+      displacement: (v) => `${Math.round(v)} px`,
+      frequencyX: (v) => Number(v).toFixed(3),
+      frequencyY: (v) => Number(v).toFixed(3),
+      octaves: (v) => String(Math.round(v)),
+      seed: (v) => String(Math.round(v))
+    };
 
-  const syncOutputs = () => {
-    document.querySelectorAll('[data-out]').forEach((output) => {
-      const key = output.dataset.out;
-      if (formats[key]) output.textContent = formats[key](cfg[key]);
+    const syncOutputs = () => {
+      document.querySelectorAll('[data-out]').forEach((output) => {
+        const key = output.dataset.out;
+        if (formats[key]) output.textContent = formats[key](cfg[key]);
+      });
+      dirButtons.forEach((button) => {
+        button.setAttribute('aria-pressed', String(button.dataset.dir === cfg.direction));
+      });
+    };
+
+    const syncInputs = () => {
+      inputs.forEach((input) => {
+        input.value = String(cfg[input.dataset.key]);
+      });
+      syncOutputs();
+    };
+
+    const openLab = (open) => {
+      lab.classList.toggle('is-open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+      panel.setAttribute('aria-hidden', String(!open));
+      if (open) {
+        panel.removeAttribute('inert');
+      } else {
+        panel.setAttribute('inert', '');
+      }
+    };
+
+    toggle.addEventListener('click', () => {
+      openLab(!lab.classList.contains('is-open'));
     });
-    dirButtons.forEach((button) => {
-      button.setAttribute('aria-pressed', String(button.dataset.dir === cfg.direction));
-    });
-  };
 
-  const syncInputs = () => {
-    inputs.forEach((input) => {
-      input.value = String(cfg[input.dataset.key]);
-    });
-    syncOutputs();
-  };
-
-  const openLab = (open) => {
-    lab.classList.toggle('is-open', open);
-    toggle.setAttribute('aria-expanded', String(open));
-    panel.setAttribute('aria-hidden', String(!open));
-    if (open) {
-      panel.removeAttribute('inert');
-    } else {
-      panel.setAttribute('inert', '');
-    }
-  };
-
-  toggle.addEventListener('click', () => {
-    openLab(!lab.classList.contains('is-open'));
-  });
-
-  closeButton.addEventListener('click', () => {
-    openLab(false);
-    toggle.focus();
-  });
-
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && lab.classList.contains('is-open')) {
+    closeButton.addEventListener('click', () => {
       openLab(false);
       toggle.focus();
-    }
-  });
+    });
 
-  inputs.forEach((input) => {
-    input.addEventListener('input', () => {
-      const key = input.dataset.key;
-      if (!(key in cfg)) return;
-      cfg[key] = Number(input.value);
-      syncOutputs();
-      applyAll();
-      requestTick();
-      if (MASK_KEYS.has(key)) {
-        // При смене размера кляксы геометрия полосы меняется — старую
-        // кромку сразу убираем. Для seed/шума можно дождаться новой.
-        maskStore.schedule(180, key === 'displacement');
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && lab.classList.contains('is-open')) {
+        openLab(false);
+        toggle.focus();
       }
     });
-  });
 
-  dirButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      cfg.direction = button.dataset.dir;
-      syncOutputs();
+    inputs.forEach((input) => {
+      input.addEventListener('input', () => {
+        const key = input.dataset.key;
+        if (!(key in cfg)) return;
+        cfg[key] = Number(input.value);
+        syncOutputs();
+        applyAll();
+        requestTick();
+      });
+    });
+
+    dirButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        cfg.direction = button.dataset.dir;
+        syncOutputs();
+        applyAll();
+        requestTick();
+      });
+    });
+
+    resetButton.addEventListener('click', () => {
+      Object.assign(cfg, BASE);
+      syncInputs();
       applyAll();
       requestTick();
     });
-  });
 
-  resetButton.addEventListener('click', () => {
-    Object.assign(cfg, DEFAULTS);
     syncInputs();
-    applyAll();
-    requestTick();
-    maskStore.schedule(0, true);
-  });
-
-  syncInputs();
   }
+  };
+
+  /* Тяжёлая инициализация — после первого кадра, чтобы страница успела
+     показаться. Если пользователь сразу скроллит или трогает пульт —
+     запускаем немедленно. */
+  const scheduleStart = () => {
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(start, { timeout: 400 });
+    } else {
+      setTimeout(start, 0);
+    }
+  };
+
+  if (document.readyState === 'complete') {
+    scheduleStart();
+  } else {
+    window.addEventListener('load', scheduleStart, { once: true });
+  }
+  window.addEventListener('scroll', start, { passive: true, once: true });
+  window.addEventListener('pointerdown', start, { passive: true, once: true });
 })();
