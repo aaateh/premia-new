@@ -13,6 +13,7 @@ index.html
 jury.html
 css/tokens.css
 css/style.css
+css/tariffs.css         (тарифы-постеры в разделе «Стоимость»)
 css/fire.css            (сцена с огнём на первых двух экранах)
 css/scroll-burn.css     (кромка прожига между секциями)
 css/partners-form.css     (стили формы «Стать партнёром»)
