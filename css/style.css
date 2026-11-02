@@ -1501,6 +1501,19 @@ body.menu-open .header {
 .socials__link--vk svg { height: 22px; }
 .socials__link--max svg { height: 28px; }
 
+/* соцсети в контактах — крупнее, это нижний блок перед подвалом */
+.contacts .socials {
+  gap: 20px;
+  margin-top: 30px;
+}
+.contacts .socials__link {
+  width: 56px;
+  height: 56px;
+}
+.contacts .socials__link--tg svg { height: 34px; }
+.contacts .socials__link--vk svg { height: 30px; }
+.contacts .socials__link--max svg { height: 36px; }
+
 /* ---------- подвал ---------- */
 
 .footer {
