@@ -140,10 +140,9 @@
         this.mh = mh;
         this.ready = true;
         this.burns.forEach((burn, index) => {
-          burn.setMask(masks[index % masks.length], mw, mh);
+          const mask = masks[index % masks.length];
+          burn.setMask(mask, mw, mh, mask);
         });
-        // Тонированные копии уже лежат в canvas каждого перехода.
-        this.masks = [];
         requestTick();
       } catch (error) {
         // Без кромки остаётся простой прямой прожиг — эффект не ломается.
@@ -173,6 +172,8 @@
       this.padY = 300;
       this.solidPart = 340;
       this.bandHeight = 640;
+      this.maskSource = null;
+      this.morphNext = -1;
       this.build();
       this.measure();
     }
@@ -265,7 +266,9 @@
       this.written = -1;
     }
 
-    setMask(maskCanvas, mw, mh) {
+    setMask(maskCanvas, mw, mh, source) {
+      this.maskSource = source || maskCanvas;
+      this.morphNext = -1;
       const canvas = this.canvas;
       canvas.width = mw;
       canvas.height = mh;
@@ -277,6 +280,39 @@
       ctx.fillRect(0, 0, mw, mh);
       ctx.globalCompositeOperation = 'source-over';
       this.maskReady = true;
+    }
+
+    // Кромка не просто едет: её форма «перетекает» — полосы маски
+    // смещаются по вертикали волной, фаза которой зависит от прогресса.
+    morph(next) {
+      const source = this.maskSource;
+      if (!source || !this.maskReady) return;
+      if (this.morphNext >= 0 && Math.abs(next - this.morphNext) < 0.0025) return;
+
+      this.morphNext = next;
+      const canvas = this.canvas;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      const strip = 4;
+      const start = Math.max(0, this.padX - strip);
+      const end = Math.min(w, this.padX + this.el.clientWidth + strip);
+      const phase = next * 7.5 + this.index * 1.1;
+
+      ctx.clearRect(0, 0, w, h);
+      for (let x = start; x < end; x += strip) {
+        const width = Math.min(strip, w - x);
+        const wave = 0.5 + 0.5 * (
+          0.7 * Math.sin(x * 0.012 + phase) +
+          0.3 * Math.sin(x * 0.031 + phase * 1.7)
+        );
+        const dy = -22 * wave;
+        ctx.drawImage(source, x, 0, width, h, x, dy, width, h);
+      }
+      ctx.globalCompositeOperation = 'source-in';
+      ctx.fillStyle = this.color;
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalCompositeOperation = 'source-over';
     }
 
     clearMask() {
@@ -340,10 +376,15 @@
         ? edgeY - this.padY
         : edgeY - this.solidPart;
 
-      const drift = Math.sin(next * Math.PI * 2 * 1.2 + this.index) * 10;
+      const drift =
+        Math.sin(next * Math.PI * 2 * 1.4 + this.index * 0.9) * 70 +
+        Math.sin(next * Math.PI * 2 * 2.8 + this.index * 1.7) * 30;
+      const breathe = 1 + Math.sin(next * Math.PI * 2 * 0.8 + this.index) * 0.035;
 
       this.band.style.transform =
-        `translate3d(${drift.toFixed(2)}px, ${bandY.toFixed(2)}px, 0)`;
+        `translate3d(${drift.toFixed(2)}px, ${bandY.toFixed(2)}px, 0) scaleX(${breathe.toFixed(4)})`;
+
+      this.morph(next);
 
       return settling;
     }
