@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" class="is-intro">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -13,16 +13,17 @@
   <link rel="preload" href="fonts/Involve-Regular.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="fonts/dela-gothic-one-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="css/tokens.css?v=10" />
-  <link rel="stylesheet" href="css/style.css?v=85" />
-  <link rel="stylesheet" href="css/tariffs.css?v=3" />
+  <link rel="stylesheet" href="css/style.css?v=86" />
+  <link rel="stylesheet" href="css/tariffs.css?v=5" />
   <link rel="stylesheet" href="css/scroll-burn.css?v=5" />
   <link rel="stylesheet" href="css/fire.css?v=3" />
   <link rel="stylesheet" href="css/partners-form.css?v=1" />
-  <link rel="stylesheet" href="css/intro.css?v=6" />
+  <link rel="stylesheet" href="css/intro.css?v=9" />
   <noscript>
     <style>
       .intro { display: none !important; }
-      body.is-intro { overflow: auto; }
+      body.is-intro { position: static; overflow: auto; }
+      html.is-intro { overflow: auto; }
       body.is-intro .site,
       body.is-intro .fire-scene { opacity: 1; pointer-events: auto; }
     </style>
@@ -482,8 +483,8 @@
 
             <div class="poster-tape" aria-hidden="true">
               <div class="poster-tape__scroll">
-                <span>9&nbsp;900&nbsp;₽ // ЛЮДИ В МАРКЕТИНГЕ. ДЛЯ ФРИЛАНСЕРОВ И СПЕЦИАЛИСТОВ В НАЙМЕ. // ПОДАТЬ ЗАЯВКУ //</span>
-                <span>9&nbsp;900&nbsp;₽ // ЛЮДИ В МАРКЕТИНГЕ. ДЛЯ ФРИЛАНСЕРОВ И СПЕЦИАЛИСТОВ В НАЙМЕ. // ПОДАТЬ ЗАЯВКУ //</span>
+                <span>9&nbsp;900&nbsp;₽ // ДЛЯ ФРИЛАНСЕРОВ И СПЕЦИАЛИСТОВ В НАЙМЕ. // ПОДАТЬ ЗАЯВКУ //</span>
+                <span>9&nbsp;900&nbsp;₽ // ДЛЯ ФРИЛАНСЕРОВ И СПЕЦИАЛИСТОВ В НАЙМЕ. // ПОДАТЬ ЗАЯВКУ //</span>
               </div>
             </div>
 
@@ -491,7 +492,7 @@
               <div class="poster-barcode" aria-hidden="true"></div>
               <div class="poster-info">
                 <p class="poster-price">9&nbsp;900&nbsp;₽</p>
-                <p>Для фрилансеров и специалистов в найме.<span class="poster-date">С 19 ноября — 11&nbsp;990&nbsp;₽.</span></p>
+                <p>Для фрилансеров<br />и специалистов в найме.<span class="poster-date">С 19 ноября — 11&nbsp;990&nbsp;₽.</span></p>
                 <a class="poster-cta" href="https://salebot.site/st/bw6e/conf_surov_forum_prem" target="_blank" rel="noopener" aria-label="Подать заявку — Люди в маркетинге, 9 900 ₽">Подать заявку</a>
               </div>
             </div>
@@ -518,7 +519,7 @@
               <div class="poster-barcode" aria-hidden="true"></div>
               <div class="poster-info">
                 <p class="poster-price">24&nbsp;900&nbsp;₽</p>
-                <p>Для инхаус-команд, агентств и групп специалистов.<span class="poster-date">С 19 ноября — 27&nbsp;990&nbsp;₽.</span></p>
+                <p>Для инхаус-команд, агентств<br />и групп специалистов.<span class="poster-date">С 19 ноября — 27&nbsp;990&nbsp;₽.</span></p>
                 <a class="poster-cta" href="https://salebot.site/st/bw6e/conf_surov_forum_prem" target="_blank" rel="noopener" aria-label="Подать заявку — Участие команд, 24 900 ₽">Подать заявку</a>
               </div>
             </div>
@@ -1049,7 +1050,7 @@
 
 </div><!-- /.site -->
 
-<script src="js/intro.js?v=8" defer></script>
+<script src="js/intro.js?v=10" defer></script>
 <script>
   /* Сайт оживает после заставки: его скрипты подключаются на видимой
      странице, поэтому анимации стартуют на месте, а не за кадром. */

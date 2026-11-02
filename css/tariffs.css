@@ -288,7 +288,7 @@
   background: var(--tp-ink);
   color: var(--tp-bg);
   font-family: "JetBrains Mono", monospace;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 700;
   line-height: 1;
   letter-spacing: 0.06em;
@@ -319,6 +319,16 @@
 @media (max-width: 560px) {
   .tariff-posters .poster-card {
     height: 540px;
+  }
+
+  /* на узком постере описание чуть мельче и шире, чтобы строка
+     «Для инхаус-команд, агентств» не рвалась по дефису */
+  .tariff-posters .poster-info {
+    max-width: 76%;
+  }
+
+  .tariff-posters .poster-info p {
+    font-size: 0.9375rem;
   }
 }
 

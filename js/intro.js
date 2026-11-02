@@ -719,6 +719,7 @@
         }
         if (document.body.classList.contains('is-intro')) {
             document.body.classList.remove('is-intro');
+            document.documentElement.classList.remove('is-intro');
         }
         toTop();
         announceIntroDone();
@@ -777,6 +778,7 @@
         root.hidden = false;
         root.classList.remove('is-leaving', 'is-armed');
         document.body.classList.add('is-intro');
+        document.documentElement.classList.add('is-intro');
         toTop();
         if (frame) {
             frame.inert = true;
@@ -879,27 +881,6 @@
             skip();
         }
     });
-
-    var wheelAcc = 0;
-    root.addEventListener('wheel', function (e) {
-        wheelAcc += Math.abs(e.deltaY);
-        if (wheelAcc > 120) {
-            skip();
-        }
-    }, { passive: true });
-
-    var touchY = 0;
-    root.addEventListener('touchstart', function (e) {
-        touchY = e.touches[0] ? e.touches[0].clientY : 0;
-    }, { passive: true });
-    root.addEventListener('touchmove', function (e) {
-        if (!e.touches[0]) {
-            return;
-        }
-        if (Math.abs(e.touches[0].clientY - touchY) > 40) {
-            skip();
-        }
-    }, { passive: true });
 
     if (replayBtn) {
         replayBtn.addEventListener('click', replay);
@@ -1020,6 +1001,7 @@
     if (noIntro) {
         root.hidden = true;
         document.body.classList.remove('is-intro');
+        document.documentElement.classList.remove('is-intro');
         toTop();
         if (frame) {
             frame.inert = false;
@@ -1040,6 +1022,7 @@
     } catch (err) {
         root.hidden = true;
         document.body.classList.remove('is-intro');
+        document.documentElement.classList.remove('is-intro');
         toTop();
         if (frame) {
             frame.inert = false;

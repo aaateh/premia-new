@@ -5,6 +5,19 @@
    ========================================================================== */
 
 body.is-intro {
+    /* фиксируем страницу: пока идёт загрузка, документ не должен
+       прокручиваться ни жестом, ни программно — иначе заставка ломается */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+/* Пока идёт загрузка, страницу нельзя прокрутить: скроллером в документе
+   выступает html, одного overflow у body для этого мало. */
+html.is-intro {
     overflow: hidden;
     overscroll-behavior: none;
 }
@@ -41,6 +54,7 @@ body.is-intro .fire-scene {
     opacity: 1;
     cursor: pointer;
     user-select: none;
+    touch-action: none;
     -webkit-tap-highlight-color: transparent;
     transition: opacity 900ms cubic-bezier(.4, 0, .2, 1);
 }
