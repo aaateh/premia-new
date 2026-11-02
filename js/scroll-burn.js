@@ -218,6 +218,15 @@
     }
 
     measure() {
+      // Короткая секция = «экран» целиком: прожиг ровно по ней, без нахлёста
+      // на соседнюю секцию. Высокая — только нижние 100svh.
+      const host = this.el.parentElement;
+      const viewport = window.innerHeight || 1;
+      if (host) {
+        const hostHeight = host.getBoundingClientRect().height;
+        this.el.classList.toggle('burn--viewport', hostHeight > viewport);
+      }
+
       const rect = this.el.getBoundingClientRect();
       this.height = rect.height;
       this.docTop = rect.top + (window.scrollY || window.pageYOffset || 0);
@@ -280,7 +289,8 @@
 
     update(config, viewportHeight, rectTop, reducedMotion) {
       const startPx = (config.start / 100) * viewportHeight;
-      const endPx = (config.end / 100) * viewportHeight - (this.edge + config.displacement / 2 + 8);
+      const burnHeight = this.height || viewportHeight;
+      const endPx = (config.end / 100) * burnHeight - (this.edge + config.displacement / 2 + 8);
 
       const begin = this.docTop > endPx + 1
         ? Math.min(startPx, this.docTop)
