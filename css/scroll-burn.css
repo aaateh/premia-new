@@ -1,6 +1,6 @@
 /* ==========================================================================
    Scroll Burn — прожиг между секциями.
-   Chrome: живой SVG-фильтр. Safari/WebKit: SVG-путь с CSS-заливкой.
+   Кэшированная PNG-маска кромки + цветной CSS-слой: в кадре только transform.
    ========================================================================== */
 
 /* секция-хозяин прожига */
@@ -24,37 +24,48 @@
   height: 100svh;
 }
 
-/* SVG-контейнер фильтра (1×1, не занимает место) */
-.burn__defs {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-/* область с запасом под смещение и блюр */
-.burn__pad {
-  position: absolute;
-}
-
-/* заливка цвета следующей секции */
-.burn__fill {
+.burn__solid {
   position: absolute;
   left: 0;
   width: 100%;
-  transform: scaleY(0);
+  height: 100%;
+  transform: translate3d(0, 0, 0) scaleY(0);
+  transform-origin: 50% 100%;
+  will-change: transform;
 }
 
-/* Safari/WebKit: кромка простым путём, цвет — CSS-заливкой */
-.burn__edge {
+.burn__band {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+
+.burn__band-inner {
+  position: absolute;
+  inset: 0;
+}
+
+.burn__band-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.burn__band-image {
   position: absolute;
   inset: 0;
   display: block;
   width: 100%;
   height: 100%;
-  overflow: visible;
-  pointer-events: none;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-position: 0 0;
+  mask-position: 0 0;
+  -webkit-mask-source-type: alpha;
+  mask-mode: alpha;
 }
