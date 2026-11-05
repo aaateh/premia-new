@@ -4,6 +4,14 @@
    Без теней, градиентов и фоновых эффектов.
    ========================================================================== */
 
+@font-face {
+  font-family: "Bounded Award";
+  src: url("../fonts/Bounded-Black.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ---------- базовая типографика ---------- */
 
 h1, h2, h3, h4, p, ul, ol, figure, blockquote { margin: 0; }
@@ -24,6 +32,7 @@ h2 {
   font-weight: 400;
   line-height: 1.14;
   letter-spacing: -.01em;
+  word-spacing: .14em;
   text-transform: uppercase;
   text-wrap: balance;
   overflow-wrap: break-word;
@@ -482,6 +491,19 @@ body.menu-open .header {
 .section-head .lead + .muted { margin-top: 10px; }
 .section-head .lead + .lead { margin-top: 10px; }
 
+/* Блоки с анимацией справа от заголовка («Как принять участие», «Организаторы») */
+.section-head--art { max-width: none; }
+
+.head-art {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: clamp(28px, 4vw, 64px);
+}
+
+.head-art h2 { max-width: 840px; order: 1; }
+.head-art > :not(h2) { order: 2; }
+
 .eyebrow {
   display: flex;
   align-items: center;
@@ -601,29 +623,54 @@ body.menu-open .header {
 
 .card h3 { margin-top: 2px; }
 
-/* «Участники»: без серого контура, картинка снизу во всю ширину текста */
-#participants .card {
-  padding-bottom: 16px;
-}
-
+/* «Участники»: без серого контура */
 #participants .card::before { display: none; }
 
+/* «Участники»: картинки снизу, прижаты к низу карточек */
+#participants .card { padding-bottom: 16px; }
+
 #participants .card__figure {
-  width: 100%;
+  width: 67.5%;
   height: auto;
-  margin-top: auto;            /* картинки прижаты к низу и стоят на одной линии */
-  mix-blend-mode: multiply;    /* белый фон иллюстрации растворяется в бумаге */
+  align-self: center;
+  margin-top: auto;
 }
 
-#participants .card:nth-child(1) .card__figure,
-#participants .card:nth-child(2) .card__figure { width: 90%; }
+/* «Участники»: ключ у правого края, качается верхняя часть */
+#participants .wrap { position: relative; z-index: 2; }
 
-#participants .card:nth-child(3) .card__figure { width: 87%; }
+.key-art {
+  position: absolute;
+  top: 84px;
+  right: 0;
+  z-index: 1;
+  width: 300px;
+  isolation: isolate;
+  transform-origin: 50% 94%;
+  animation: keySway 7s ease-in-out infinite;
+  pointer-events: none;
+}
 
-/* «Участие»: белая карточка без контура, картинка справа, текст инвертирован */
+.key-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@keyframes keySway {
+  0%,
+  100% {
+    transform: scaleX(-1) rotate(-5deg);
+  }
+  50% {
+    transform: scaleX(-1) rotate(5deg);
+  }
+}
+
+/* «Участие»: карточка цвета бумаги (как фон блока «Номинации»), картинка справа, текст инвертирован */
 #benefits .card {
-  --card-surface: #FFFFFF;
-  --card-surface-hover: #FFFFFF;
+  --card-surface: var(--paper);
+  --card-surface-hover: var(--paper);
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(112px, 13.3vw, 168px);
   grid-template-rows: auto 1fr;
@@ -660,8 +707,44 @@ body.menu-open .header {
   grid-row: 1 / span 2;
   align-self: center;
   justify-self: end;
+  width: 90%;
+  height: auto;
+}
+
+/* «Зачем участвовать»: золотое перо у правого края, как топор */
+#benefits .wrap { position: relative; z-index: 2; }
+
+.quill {
+  position: absolute;
+  top: 84px;
+  right: -96px;             /* сам рисунок — у правого края, без прозрачных полей */
+  width: 360px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.quill img {
+  display: block;
   width: 100%;
   height: auto;
+  transform-origin: 50% 12%;
+  animation: quillFloat 7s ease-in-out infinite;
+}
+
+@keyframes quillFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-1.2deg);
+  }
+  25% {
+    transform: translate3d(-4px, -7px, 0) rotate(1.4deg);
+  }
+  50% {
+    transform: translate3d(2px, -13px, 0) rotate(-0.6deg);
+  }
+  75% {
+    transform: translate3d(-2px, -5px, 0) rotate(1deg);
+  }
 }
 
 /* ---------- миссия и принципы ---------- */
@@ -727,6 +810,30 @@ body.menu-open .header {
 .prose p + p { margin-top: 18px; }
 
 /* ---------- номинации ---------- */
+
+/* Огонь в верхнем правом углу блока: не участвует в потоке и не двигает текст. */
+#nominations .wrap { position: relative; }
+#nominations .fire-slot {
+  position: absolute;
+  top: 23px;                 /* по уровню H2: низ огня совпадает с низом заголовка */
+  right: var(--edge);
+  width: 100px;
+  height: 100px;
+  pointer-events: none;
+}
+
+#nominations .fire-slot .fire {
+  transform: scale(0.8);     /* анимация на 20% меньше */
+  transform-origin: center bottom;
+}
+
+@media (max-width: 1100px) {
+  #nominations .fire-slot { top: -68px; }
+}
+
+@media (max-width: 600px) {
+  #nominations .fire-slot { top: -56px; }
+}
 
 .nom-group {
   margin-bottom: 12px;
@@ -804,9 +911,14 @@ body.menu-open .header {
   gap: 6px;
 }
 
-.nom-group__title h3 { font-size: 20px; }
+.nom-group__heading {
+  font-family: var(--font-ui);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.3;
+}
 
-.nom-group__title span {
+.nom-group__desc {
   max-width: 760px;
   color: var(--scene-muted);
   font-size: 16px;
@@ -893,14 +1005,13 @@ body.menu-open .header {
 .cta-strip__text h3 { font-size: 20px; line-height: 1.3; }
 .cta-strip__text p { margin-top: 8px; font-size: 16px; }
 
-/* «Не уверены, какую номинацию выбрать?»: картинка справа, кнопка под текстом */
-.cta-strip--figure .cta-strip__text .btn { margin-top: 22px; }
+/* «Не уверены, какую номинацию выбрать?»: иллюстрация справа, кнопка под текстом */
+.cta-strip__text .btn { margin-top: 22px; }
 
 .cta-strip__figure {
   flex: none;
-  width: clamp(144px, 17.6vw, 208px);
-  height: auto;
-  mix-blend-mode: multiply;   /* белый фон иллюстрации растворяется в бумаге */
+  width: auto;
+  height: clamp(140px, 11vw, 160px);   /* не выше текста с кнопкой */
 }
 
 .note-strong {
@@ -915,6 +1026,54 @@ body.menu-open .header {
 }
 
 /* ---------- стоимость ---------- */
+
+/* Камера у правого края блока, как топор */
+#pricing .wrap { position: relative; z-index: 2; }
+
+.pricing-camera {
+  position: absolute;
+  top: 40px;
+  right: 26px;              /* запас под поворот, чтобы не обрезало край */
+  z-index: 1;
+  width: 203px;             /* ещё на 10% меньше */
+  rotate: 15deg;            /* по часовой стрелке */
+  animation: cameraShake 10s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.pricing-camera img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* редкое покачивание камеры по часовой и против часовой */
+@keyframes cameraShake {
+  0%,
+  74%,
+  100% {
+    transform: rotate(0);
+  }
+  77% {
+    transform: rotate(1.4deg);
+  }
+  80% {
+    transform: rotate(-1.4deg);
+  }
+  83% {
+    transform: rotate(0.9deg);
+  }
+  86% {
+    transform: rotate(-0.9deg);
+  }
+  89% {
+    transform: rotate(0.4deg);
+  }
+  92%,
+  96% {
+    transform: rotate(0);
+  }
+}
 
 .price-card { gap: 10px; padding: 32px; }
 .price-card h3 { font-family: var(--font-base); font-size: 20px; font-weight: 600; }
@@ -978,6 +1137,24 @@ body.menu-open .header {
 .steps p { max-width: 720px; margin-top: 8px; font-size: 16px; }
 
 /* ---------- даты ---------- */
+
+#dates { position: relative; }
+#dates .wrap { position: relative; z-index: 2; }
+
+/* Кофе-лоадер вынесен из блока «Этапы»; код сохранён в css/dates-coffee.css
+   и в демо «Эффекты/кофе-лоадер.html». */
+.dates-art {
+  position: absolute;
+  top: -7px;                /* низ чашки на уровне низа H2 */
+  right: var(--edge);
+  width: 100px;
+  height: 100px;
+  pointer-events: none;
+}
+
+@media (max-width: 1100px) {
+  .dates-art { top: -68px; } /* на узких экранах — над заголовком */
+}
 
 .timeline-panel {
   --panel-border: var(--rule-strong);
@@ -1101,9 +1278,21 @@ body.menu-open .header {
 .jury-card { display: flex; flex-direction: column; gap: 10px; }
 .jury-card .ph { margin-bottom: 6px; }
 
+.jury-card__photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: var(--radius);
+  margin-bottom: 6px;
+}
+
 .jury-card__name {
-  font-family: var(--font-ui);
-  font-size: 20px;
+  font-family: "Bounded Award", var(--font-ui);
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: -.01em;
   line-height: 1.3;
 }
 
@@ -1120,6 +1309,61 @@ body.menu-open .header {
 .jury-card p { margin-top: 2px; }
 
 /* ---------- результаты ---------- */
+
+/* Часы на стыке «Этапов» и «Что получают участники» */
+.pocket-watch {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: auto;
+  z-index: 1;
+  width: 255px;             /* на 15% меньше прежних 300 px */
+  isolation: isolate;
+  pointer-events: none;
+}
+
+.pocket-watch img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.pocket-watch::before {
+  content: "";
+  position: absolute;
+  inset: -12%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 140, 45, 0.4),
+    rgba(255, 95, 25, 0.16) 55%,
+    transparent 82%
+  );
+  filter: blur(16px);
+  animation: watchGlow 3.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes watchGlow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.97);
+  }
+  30% {
+    opacity: 0.85;
+    transform: scale(1.03);
+  }
+  55% {
+    opacity: 0.65;
+    transform: scale(1);
+  }
+  75% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
 
 /* ступенчатые карточки + таймлайн над ними */
 .awards { position: relative; }
@@ -1203,6 +1447,47 @@ body.menu-open .header {
 
 /* ---------- партнёры ---------- */
 
+/* Лампа у правого края блока, свечение вокруг огня */
+.lamp {
+  position: absolute;
+  top: 84px;
+  right: 48px;
+  z-index: 1;
+  width: 182px;
+  height: 130px;
+  isolation: isolate;
+  transform: rotate(-15deg);
+  pointer-events: none;
+}
+
+.lamp img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.lamp::before {
+  content: "";
+  position: absolute;
+  left: -12%;
+  top: 0;
+  z-index: -1;
+  width: 55%;
+  height: 80%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 115, 20, 0.7),
+    rgba(255, 85, 10, 0.34) 50%,
+    rgba(255, 70, 0, 0.12) 68%,
+    transparent 84%
+  );
+  filter: blur(16px);
+  animation: watchGlow 3.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
 .partners__logos {
   display: flex;
   flex-wrap: wrap;
@@ -1259,6 +1544,15 @@ body.menu-open .header {
 
 @media (prefers-reduced-motion: reduce) {
   .axe img { transition: none; }
+  .quill img { animation: none; }
+  .torch::before { animation: none; }
+  .pocket-watch::before { animation: none; }
+  .faq-book { animation: none; }
+  .faq-book::before { animation: none; }
+  .pricing-camera { animation: none; }
+  .key-art { transform: scaleX(-1); animation: none; }
+  .lamp::before { animation: none; }
+  .fire-slot .fire * { animation: none; }
   .awards-mark--pulse,
   .awards-dot { animation: none; }
   .awards-glint { animation: none; opacity: 0; }
@@ -1267,6 +1561,13 @@ body.menu-open .header {
 
 @media (max-width: 1399px) {
   .axe { display: none; }
+  .quill { display: none; }
+  .torch { display: none; }
+  .pocket-watch { display: none; }
+  .faq-book { display: none; }
+  .pricing-camera { display: none; }
+  .key-art { display: none; }
+  .lamp { display: none; }
 }
 
 /* ---------- страница жюри ---------- */
@@ -1368,6 +1669,72 @@ body.menu-open .header {
 
 .faq { border-top: 1px solid var(--rule-strong); }
 
+/* FAQ: книга у правого края, со свечением вокруг */
+#faq .wrap { position: relative; z-index: 2; }
+
+.faq-book {
+  position: absolute;
+  top: 84px;
+  right: 40px;
+  z-index: 1;
+  width: 204px;             /* на 15% меньше прежних 240 px */
+  isolation: isolate;
+  animation: faqBookShake 9s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.faq-book img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter:
+    drop-shadow(0 0 10px rgba(245, 102, 36, 0.55))
+    drop-shadow(0 0 26px rgba(245, 102, 36, 0.35));
+}
+
+.faq-book::before {
+  content: "";
+  position: absolute;
+  inset: -22%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 120, 25, 0.7),
+    rgba(255, 90, 10, 0.35) 48%,
+    rgba(245, 70, 0, 0.14) 68%,
+    transparent 86%
+  );
+  filter: blur(22px);
+  animation: watchGlow 3.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* редкое «потряхивание» книги, основное время — покой */
+@keyframes faqBookShake {
+  0%,
+  76%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0);
+  }
+  79% {
+    transform: translate3d(-2px, 0, 0) rotate(-1.4deg);
+  }
+  82% {
+    transform: translate3d(2px, -1px, 0) rotate(1.4deg);
+  }
+  85% {
+    transform: translate3d(-2px, 1px, 0) rotate(-1deg);
+  }
+  88% {
+    transform: translate3d(1px, 0, 0) rotate(0.7deg);
+  }
+  91%,
+  94% {
+    transform: translate3d(0, 0, 0) rotate(0);
+  }
+}
+
 .faq details { border-bottom: 1px solid var(--rule); }
 
 .faq summary {
@@ -1423,6 +1790,72 @@ body.menu-open .header {
 }
 
 .faq details p a:hover { color: var(--accent-text); }
+
+/* «Контакты»: факел у правого края, как топор и перо */
+#contacts { position: relative; }
+#contacts .wrap { position: relative; z-index: 2; }
+
+.torch {
+  position: absolute;
+  top: 84px;
+  right: 0;                 /* полностью в кадре, без выхода за край */
+  width: 360px;
+  z-index: 1;
+  isolation: isolate;
+  transform: scaleX(-1);    /* зеркалим вместе со свечением */
+  pointer-events: none;
+}
+
+.torch img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* мерцающее свечение вокруг пламени (верхняя часть картинки) */
+.torch::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 52%;
+  z-index: -1;
+  width: 36%;
+  height: 40%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 150, 50, 0.55),
+    rgba(255, 90, 20, 0.22) 55%,
+    transparent 80%
+  );
+  filter: blur(14px);
+  animation: torchGlow 2.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes torchGlow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.95) translateY(2px);
+  }
+  20% {
+    opacity: 0.9;
+    transform: scale(1.04) translateY(-2px);
+  }
+  45% {
+    opacity: 0.6;
+    transform: scale(0.99);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.07) translateY(-4px);
+  }
+  85% {
+    opacity: 0.7;
+    transform: scale(1.01);
+  }
+}
 
 /* ---------- контакты ---------- */
 
@@ -1776,7 +2209,7 @@ body.menu-open .header {
     grid-row: 3;
     align-self: start;
     justify-self: center;
-    width: min(100%, 168px);
+    width: min(100%, 150px);
     margin-top: 8px;
     margin-right: 0;
   }
@@ -1800,6 +2233,17 @@ body.menu-open .header {
 }
 
 @media (max-width: 600px) {
+  /* Анимации — в свободном верхнем углу, над заголовком, текст не двигаем. */
+  .head-art { position: relative; display: block; }
+  .head-art h2 { max-width: none; }
+  .head-art > :not(h2) {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 6px);
+    z-index: 6;
+    margin: 0;
+    zoom: 0.75;
+  }
   .header__inner { min-height: 72px; }
   .logo__img { height: 26px; }
   .nav { top: 72px; }
@@ -1858,7 +2302,7 @@ body.menu-open .header {
   .awards-grid .card:nth-child(3) .awards-dot { animation-delay: 3.5s; }
 
   .nom-group__summary { gap: 12px; padding: 20px; }
-  .nom-group__title h3 { font-size: 20px; }
+  .nom-group__heading { font-size: 20px; }
   .nom-group__count { display: none; }
   .nom-group__body { padding: 20px; }
   .nom-group__toggle { width: 24px; height: 24px; }
@@ -1901,9 +2345,45 @@ body.menu-open .header {
   .footer__bottom { font-size: 12px; }
 }
 
+@media (max-width: 359px) {
+  /* Совсем узкие экраны: чуть уменьшаем, чтобы не задеть надпись слева. */
+  .head-art > :not(h2) { zoom: 0.6; }
+}
+
 @media (max-width: 360px) {
   .logo__img { height: 24px; }
   h1 { font-size: 34px; }
   .hero__cta .btn { min-width: 0; }
   .btn { min-width: 0; }
+}
+
+/* ---------- пауза CSS-анимаций ---------- */
+/* Блоки вне экрана получают .anim-paused, фон вкладки — html.is-page-hidden. */
+.anim-paused,
+.anim-paused::before,
+.anim-paused::after,
+.anim-paused *,
+.anim-paused *::before,
+.anim-paused *::after,
+html.is-page-hidden *,
+html.is-page-hidden *::before,
+html.is-page-hidden *::after {
+  animation-play-state: paused !important;
+}
+
+/* ---------- порядок слоёв ---------- */
+/* Декоративные картинки и анимации должны оставаться над прожигом (z-index: 5). */
+.axe,
+.quill,
+.torch,
+.pocket-watch,
+.faq-book,
+.pricing-camera,
+.key-art,
+.lamp,
+.typewriter,
+.bike,
+.fire-slot,
+.dates-art {
+  z-index: 6;
 }

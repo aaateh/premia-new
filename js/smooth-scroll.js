@@ -10,10 +10,12 @@
   'use strict';
 
   const reduceQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const fineQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
   const MIN_WIDTH = 1024;
 
-  if (reduceQuery.matches || !fineQuery.matches || window.innerWidth < MIN_WIDTH) return;
+  /* Ширина, а не тип указателя: на некоторых браузерах с мышью/тачпадом
+     fine-pointer не определяется, и плавность пропадала. Телефоны и узкие
+     экраны остаются на родной прокрутке. */
+  if (reduceQuery.matches || window.innerWidth < MIN_WIDTH) return;
 
   const LERP = 0.15;          // доля пути за кадр — мягкость колеса
   const MAX_STEP = 190;       // потолок шага: большой рывок колеса не телепортирует
@@ -162,8 +164,7 @@
   }
 
   function checkMode() {
-    const active = !reduceQuery.matches && fineQuery.matches &&
-      window.innerWidth >= MIN_WIDTH;
+    const active = !reduceQuery.matches && window.innerWidth >= MIN_WIDTH;
     enabled = active;
     if (!active) {
       glide = null;
@@ -204,9 +205,6 @@
 
   if (reduceQuery.addEventListener) {
     reduceQuery.addEventListener('change', checkMode);
-  }
-  if (fineQuery.addEventListener) {
-    fineQuery.addEventListener('change', checkMode);
   }
 
   checkMode();

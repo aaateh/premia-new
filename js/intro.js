@@ -709,6 +709,32 @@
         window.setTimeout(finish, 1760);
     }
 
+    function adoptIntroVideo() {
+        /* Один ролик на заставку и на фон первого экрана: после появления
+           сайта переносим уже загруженное видео в огонь под заголовком,
+           чтобы не скачивать те же 3,4 МБ второй раз. */
+        if (!video) {
+            return;
+        }
+        var media = document.querySelector('.fire-media');
+        if (!media) {
+            return;
+        }
+        var target = media.querySelector('video');
+        if (target === video) {
+            return;
+        }
+        if (target) {
+            video.setAttribute('data-src-desktop', target.getAttribute('data-src-desktop') || '');
+            video.setAttribute('data-src-mobile', target.getAttribute('data-src-mobile') || '');
+            target.remove();
+        }
+        video.classList.remove('intro__video');
+        video.classList.add('fire-video');
+        video.removeAttribute('data-intro-video');
+        media.appendChild(video);
+    }
+
     function beginReveal() {
         root.classList.add('is-leaving');
         if (frame) {
@@ -722,6 +748,7 @@
             document.documentElement.classList.remove('is-intro');
         }
         toTop();
+        adoptIntroVideo();
         announceIntroDone();
     }
 
@@ -736,7 +763,9 @@
         root.classList.remove('is-leaving', 'is-armed');
         toTop();
         if (video) {
-            video.pause();
+            if (root.contains(video)) {
+                video.pause();
+            }
         }
         if (replayBtn) {
             replayBtn.hidden = false;

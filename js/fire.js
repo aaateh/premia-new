@@ -150,6 +150,18 @@
             return;
         }
 
+        /* Заставка уже загрузила этот же ролик и отдала его сюда:
+           второй раз по сети не тянем. */
+        if (video.getAttribute('src') === source) {
+            loadedSource = source;
+            if (video.readyState >= 2) {
+                markReady();
+                reveal();
+                sync();
+            }
+            return;
+        }
+
         loadedSource = source;
         ready = false;
         revealed = false;

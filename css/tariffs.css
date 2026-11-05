@@ -47,7 +47,7 @@
 }
 
 .tariff-posters {
-  --tp-bg: #fdfdfa;
+  --tp-bg: var(--paper, #ECE9E3);
   --tp-ink: #0a0a0a;
   --tp-accent: var(--brand-accent, #f56624);
 
@@ -66,14 +66,16 @@
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: center;
-  gap: 24px;
+  gap: clamp(24px, 3vw, 40px);
 }
 
 /* ---------- постер ---------- */
 
 .tariff-posters .poster-card {
   position: relative;
-  width: min(480px, 100%);
+  flex: 1 1 440px;
+  width: auto;
+  max-width: 560px;
   height: 450px;
   margin: 0;
   padding: 0;

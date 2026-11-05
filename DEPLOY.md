@@ -78,3 +78,23 @@ curl -s -o /dev/null -w '%{http_code}\n' https://marketingawards.ru/new/jury.htm
 Версии `?v=` должны совпасть с локальными в `index.html` и `jury.html`.
 Дополнительно открыть страницу в браузере и проверить консоль и картинки
 `img/rumantsev.jpg`, `img/characters/1-web-developer.webp`, `img/illustrations/1-briefcase.webp`.
+
+## Превью на GitHub Pages
+
+- Адрес: **https://aaateh.github.io/premia-new2/**
+- Репозиторий: **https://github.com/aaateh/premia-new2**, ветка `main`, корень `/`.
+- Это отдельный репозиторий. Старое превью `aaateh/premia-new` не трогаем.
+
+Публикуется чистый снимок проекта — без `.git`, `.opencode`, `.openchamber`,
+`backups`, `prototypes`, `php`, `mail`, `opencode.json`, `Эффекты/*.zip`
+и без 4K-ролика `media/fire/fire-desktop-4k-loop.mp4`.
+
+Обновление: пересобрать снимок, закоммитить и запушить в `main` репозитория
+`premia-new2`; GitHub Pages пересоберётся сам.
+
+Ограничения статического хостинга:
+
+- PHP не выполняется: форма «Стать партнёром» и папка `mail/` на превью не отправляют письма.
+- Документы `docs/oferta`, `docs/privacy`, `docs/consent` — статические страницы
+  с редиректом на Яндекс.Диск (в снимке вместо PHP лежат `index.html`).
+- 4K-видео в превью не заливается, используется 1440 для десктопа и 540 для телефона.

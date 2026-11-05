@@ -23,9 +23,15 @@
   });
 
   /* Safari/WebKit: полноэкранный живой SVG-фильтр не отрисовывается,
-     поэтому там векторная кромка. Chrome остаётся на живом фильтре. */
-  const USE_VECTOR_EDGE = /AppleWebKit/i.test(navigator.userAgent) &&
-    !/Chrome|Chromium|Edg|OPR|CriOS|FxiOS/i.test(navigator.userAgent);
+     поэтому там векторная кромка. Blink (Chrome, Edge, Opera, а также
+     Chrome DevTools с эмуляцией iPhone UA) остаётся на живом фильтре:
+     движок там Blink, даже если User-Agent притворяется Safari. */
+  const ua = navigator.userAgent;
+  const isWebKitOnly = /AppleWebKit/i.test(ua) &&
+    !/CriOS|FxiOS/i.test(ua) &&
+    !((!!window.chrome && navigator.vendor === 'Google Inc.') ||
+      /Chrome\/|Chromium\/|Edg\/|OPR\//.test(ua));
+  const USE_VECTOR_EDGE = isWebKitOnly;
 
   const VECTOR_DEFAULTS = Object.freeze({
     smoothing: 0.32,
@@ -137,16 +143,35 @@
         tableValues: '0 0 0 0 0 1 1 1 1 1'
       }));
 
-      /* Цвет уже есть у самой заливки (.burn__fill), поэтому feFlood и
-         feComposite не нужны: они гоняли ещё два полноэкранных прохода
-         фильтра на каждый кадр. Как в оригинальном компоненте Framer —
-         только шум, смещение, срез и лёгкое размытие. */
+      /* Цвет кромки задаём явно feFlood по цвету следующей секции:
+         без этого полупрозрачные пиксели фильтра подмешивали чёрный,
+         и на стыке появлялась серая кайма. Форма и мягкость края
+         остаются прежними — меняется только цвет. */
+      const flood = svgEl('feFlood', {
+        'flood-color': this.color,
+        result: 'flood'
+      });
+      const colorize = svgEl('feComposite', {
+        in: 'flood',
+        in2: 'cut',
+        operator: 'in',
+        result: 'colored'
+      });
+
       const postBlur = svgEl('feGaussianBlur', {
-        in: 'cut',
+        in: 'colored',
         stdDeviation: '0.4'
       });
 
-      filter.append(this.turbulence, this.displacement, preSmooth, cut, postBlur);
+      filter.append(
+        this.turbulence,
+        this.displacement,
+        preSmooth,
+        cut,
+        flood,
+        colorize,
+        postBlur
+      );
 
       const defs = svgEl('defs');
       defs.appendChild(filter);
@@ -470,6 +495,14 @@
   let lastY = window.scrollY || 0;
   let firePaused = false;
   let firePauseTimer = 0;
+  let jumpTimer = 0;
+  let jumping = false;
+
+  const setJumping = (next) => {
+    if (next === jumping) return;
+    jumping = next;
+    document.body.classList.toggle('is-burn-jumping', next);
+  };
 
   const setFirePaused = (next) => {
     if (next === firePaused) return;
@@ -489,9 +522,21 @@
     rafId = 0;
     const viewportHeight = window.innerHeight || 1;
     const y = window.scrollY || 0;
-    /* Прыжок по якорю или восстановление позиции: не прожигаем экран
-       обратно через полстраницы, а сразу встаём в целевую точку. */
-    if (Math.abs(y - lastY) > viewportHeight * 1.5) {
+    /* Прыжок по якорю, бегунку или восстановление позиции: не прожигаем
+       экран через полстраницы, а сразу ставим состояние цели и прячем
+       переход на время резкого перемещения.
+       Только на десктопе: на мобильном родная прокрутка должна отыгрывать
+       кромку нормально, как в десктопном Chrome. */
+    const jump = window.innerWidth >= 1024 &&
+      Math.abs(y - lastY) > viewportHeight * 0.75;
+    if (jump) {
+      setJumping(true);
+      clearTimeout(jumpTimer);
+      jumpTimer = setTimeout(() => {
+        setJumping(false);
+        burns.forEach((burn) => { burn.progress = -1; });
+        requestTick();
+      }, 180);
       burns.forEach((burn) => { burn.progress = -1; });
     }
     lastY = y;
@@ -545,6 +590,24 @@
     burns.forEach((burn) => burn.measure());
     requestTick();
   });
+
+  /* Ленивые картинки и раскрытые аккордеоны меняют высоту секций:
+     без повторного замера старые границы прожига «наезжают» на контент. */
+  let measureRaf = 0;
+  const scheduleMeasure = () => {
+    if (measureRaf) return;
+    measureRaf = requestAnimationFrame(() => {
+      measureRaf = 0;
+      burns.forEach((burn) => burn.measure());
+      requestTick();
+    });
+  };
+  if (window.ResizeObserver) {
+    new ResizeObserver(scheduleMeasure).observe(document.body);
+  }
+  document.addEventListener('load', (event) => {
+    if (event.target && event.target.tagName === 'IMG') scheduleMeasure();
+  }, true);
 
 
   if (document.fonts?.ready) {
