@@ -239,7 +239,17 @@
         }
 
         /* Точка на периметре скруглённого прямоугольника */
-        function perimeterPoint() {
+        function perimeterLength() {
+            var w = shape.w;
+            var h = shape.h;
+            var r = shape.r;
+            var straightX = Math.max(0, w - 2 * r);
+            var straightY = Math.max(0, h - 2 * r);
+            var arc = (Math.PI / 2) * r;
+            return 2 * straightX + 2 * straightY + 4 * arc;
+        }
+
+        function pointAtDistance(distance) {
             var x = MARGIN;
             var y = MARGIN;
             var w = shape.w;
@@ -249,7 +259,7 @@
             var straightY = Math.max(0, h - 2 * r);
             var arc = (Math.PI / 2) * r;
             var total = 2 * straightX + 2 * straightY + 4 * arc;
-            var t = Math.random() * total;
+            var t = ((distance % total) + total) % total;
             var px;
             var py;
             var nx;
@@ -327,6 +337,46 @@
                 nx: nx,
                 ny: ny
             };
+        }
+
+        function perimeterAt(normalized) {
+            return pointAtDistance(normalized * perimeterLength());
+        }
+
+        function perimeterPoint() {
+            return pointAtDistance(Math.random() * perimeterLength());
+        }
+
+        /* Нормированный параметр ближайшей точки контура */
+        function nearestParam(x, y) {
+            var samples = 120;
+            var bestT = 0;
+            var bestD = Infinity;
+            for (var i = 0; i < samples; i++) {
+                var p = perimeterAt(i / samples);
+                var dx = p.x - x;
+                var dy = p.y - y;
+                var d = dx * dx + dy * dy;
+                if (d < bestD) {
+                    bestD = d;
+                    bestT = i / samples;
+                }
+            }
+            var step = 1 / samples;
+            for (var k = 0; k < 2; k++) {
+                step *= 0.4;
+                for (var j = -2; j <= 2; j++) {
+                    var q = perimeterAt(bestT + j * step);
+                    var qx = q.x - x;
+                    var qy = q.y - y;
+                    var qd = qx * qx + qy * qy;
+                    if (qd < bestD) {
+                        bestD = qd;
+                        bestT += j * step;
+                    }
+                }
+            }
+            return ((bestT % 1) + 1) % 1;
         }
 
         /* Ближайшая точка периметра к курсору и расстояние до кнопки */
@@ -498,21 +548,24 @@
 
         function spawnFlame() {
             var group = config.flame;
-            if (Math.random() >= group.sparks / 100) {
+            if (Math.random() >= (group.sparks / 100) * 0.45) {
                 return;
             }
-            var source = flameSmooth || flameTarget;
-            if (!source) {
+            var spot = flameSmooth || flameTarget;
+            if (!spot) {
                 return;
             }
-            var tx = -source.ny;
-            var ty = source.nx;
-            var angle = Math.atan2(source.ny, source.nx) + (Math.random() - 0.5) * 1.2;
+            var total = perimeterLength();
+            var strip = Math.min(total * 0.44, 50 * (group.size / 1.75));
+            var tx = -spot.ny;
+            var ty = spot.nx;
+            var along = (Math.random() - 0.5) * strip;
+            var angle = Math.atan2(spot.ny, spot.nx) + (Math.random() - 0.5) * 1.2;
             var speed = (60 + Math.random() * 90) * group.speed;
-            var offset = (Math.random() - 0.5) * 16;
+            var offset = (Math.random() - 0.5) * 10;
             flameParticles.push({
-                x: source.x + tx * offset + source.nx * Math.random() * 3,
-                y: source.y + ty * offset + source.ny * Math.random() * 3,
+                x: spot.x + tx * (along + offset) + spot.nx * Math.random() * 3,
+                y: spot.y + ty * (along + offset) + spot.ny * Math.random() * 3,
                 vx: Math.cos(angle) * speed + tx * (Math.random() - 0.5) * 6,
                 vy: Math.sin(angle) * speed + ty * (Math.random() - 0.5) * 6 - 4,
                 angle: angle,
@@ -600,22 +653,108 @@
         }
 
         function drawFlameGlow(target) {
-            var source = flameSmooth || flameTarget;
-            if (!source) {
+            var fade = power * config.flame.glow;
+            if (fade <= 0.01 || !flameSmooth) {
                 return;
             }
-            var fade = power * (1 - ringPower) * config.flame.glow;
-            if (fade <= 0.01) {
+            var total = perimeterLength();
+            if (total <= 0) {
                 return;
             }
-            var pulse = 0.95 + 0.05 * Math.sin(performance.now() * 0.0012);
-            var glow = 36 + 26 * power;
-            var g = target.createRadialGradient(source.x, source.y, 0, source.x, source.y, glow);
-            g.addColorStop(0, 'rgba(255, 190, 110, ' + (0.30 * fade * pulse) + ')');
-            g.addColorStop(0.45, 'rgba(255, 105, 25, ' + (0.15 * fade * pulse) + ')');
-            g.addColorStop(1, 'rgba(255, 80, 0, 0)');
-            target.fillStyle = g;
-            target.fillRect(source.x - glow, source.y - glow, glow * 2, glow * 2);
+            var sizeScale = config.flame.size / 1.75;
+            var half = Math.min(total * 0.22, (50 * sizeScale) / 2) / total;
+            var t0 = nearestParam(flameSmooth.x, flameSmooth.y);
+            var a = perimeterAt(t0 - half);
+            var b = perimeterAt(t0 + half);
+            var steps = 18;
+
+            target.save();
+            target.beginPath();
+            for (var i = 0; i <= steps; i++) {
+                var p = perimeterAt(t0 - half + (i / steps) * half * 2);
+                if (i === 0) {
+                    target.moveTo(p.x, p.y);
+                } else {
+                    target.lineTo(p.x, p.y);
+                }
+            }
+            target.lineCap = 'round';
+            target.lineJoin = 'round';
+
+            var outer = target.createLinearGradient(a.x, a.y, b.x, b.y);
+            outer.addColorStop(0, 'rgba(255, 100, 20, 0)');
+            outer.addColorStop(0.3, 'rgba(255, 100, 20, ' + (0.14 * fade) + ')');
+            outer.addColorStop(0.7, 'rgba(255, 110, 25, ' + (0.14 * fade) + ')');
+            outer.addColorStop(1, 'rgba(255, 100, 20, 0)');
+            target.lineWidth = 14;
+            target.strokeStyle = outer;
+            target.shadowColor = 'rgba(255, 80, 0, ' + (0.4 * fade) + ')';
+            target.shadowBlur = 18;
+            target.stroke();
+
+            var inner = target.createLinearGradient(a.x, a.y, b.x, b.y);
+            inner.addColorStop(0, 'rgba(255, 190, 90, 0)');
+            inner.addColorStop(0.35, 'rgba(255, 190, 90, ' + (0.26 * fade) + ')');
+            inner.addColorStop(0.65, 'rgba(255, 190, 90, ' + (0.26 * fade) + ')');
+            inner.addColorStop(1, 'rgba(255, 190, 90, 0)');
+            target.lineWidth = 3;
+            target.strokeStyle = inner;
+            target.shadowColor = 'rgba(255, 140, 30, ' + (0.35 * fade) + ')';
+            target.shadowBlur = 8;
+            target.stroke();
+            target.restore();
+        }
+
+        function flameNoise(t, seed) {
+            return 0.5
+                + 0.24 * Math.sin(t * 1.15 + seed * 1.7)
+                + 0.16 * Math.sin(t * 2.31 + seed * 3.1)
+                + 0.1 * Math.sin(t * 4.07 + seed * 5.3);
+        }
+
+        function drawProceduralFlame(now) {
+            var group = config.flame;
+            var total = perimeterLength();
+            if (total <= 0 || !flameSmooth) {
+                return;
+            }
+
+            var sizeScale = group.size / 1.75;
+            var half = Math.min(total * 0.22, (50 * sizeScale) / 2) / total;
+            var t0 = nearestParam(flameSmooth.x, flameSmooth.y);
+            var count = Math.max(4, Math.min(14, Math.round(4 + group.density / 80)));
+            var time = now * 0.001 * (0.2 + group.speed * 1.4);
+            var lengthScale = Math.min(1.6, (group.stretch * group.size) / 5.25);
+            var alphaBase = Math.pow(power, 0.6) * group.alpha * 0.16;
+            var lift = (group.rise / 30) * 0.9;
+
+            for (var i = 0; i < count; i++) {
+                var u = count === 1 ? 0 : i / (count - 1) - 0.5;
+                var env = Math.pow(Math.cos(u * Math.PI), 0.7);
+                var seed = i * 1.37 + 0.5;
+                var sway = (flameNoise(time * 0.55 + 7, seed * 1.3) - 0.5) * (half * 2 / count) * 0.5;
+                var p = perimeterAt(t0 + u * half * 2 + sway);
+                var n1 = flameNoise(time, seed);
+                var n2 = flameNoise(time * 0.83 + 11, seed * 1.7);
+                var n3 = flameNoise(time * 1.21 + 23, seed * 2.3);
+
+                /* Верх длиннее низа: низ идёт по кромке, а не прямой линией */
+                var vertical = (1 - p.ny) * 0.5;
+                var length = (14 + 44 * n1) * lengthScale * (0.7 + 0.35 * vertical) * (0.55 + 0.45 * env);
+                var width = (5 + 9 * n2) * sizeScale * (0.85 + 0.3 * vertical) * (0.7 + 0.3 * env);
+
+                /* Нормаль контура плюс подъём: бока загибаются вверх, низ остаётся у края */
+                var dirX = p.nx;
+                var dirY = p.ny - lift;
+                var angle = Math.atan2(dirY, dirX) + (n3 - 0.5) * 0.3;
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(angle + Math.PI / 2);
+                ctx.globalAlpha = alphaBase * (0.5 + 0.5 * n1) * (0.72 + 0.28 * vertical) * (0.3 + 0.7 * env);
+                ctx.drawImage(TONGUE, -width / 2, -length, width, length);
+                ctx.restore();
+            }
         }
 
         function drawRingLayer() {
@@ -657,50 +796,6 @@
             ringCtx.globalCompositeOperation = 'source-over';
         }
 
-        function flameNoise(t, seed) {
-            return 0.5
-                + 0.24 * Math.sin(t * 1.15 + seed * 1.7)
-                + 0.16 * Math.sin(t * 2.31 + seed * 3.1)
-                + 0.1 * Math.sin(t * 4.07 + seed * 5.3);
-        }
-
-        function drawProceduralFlame(now) {
-            var source = flameSmooth || flameTarget;
-            if (!source) {
-                return;
-            }
-            var group = config.flame;
-            var count = Math.max(7, Math.min(28, Math.round(8 + group.density / 45)));
-            var time = now * 0.001 * (0.15 + group.speed * 0.8);
-            var baseHalf = 34 * group.size;
-            var lengthScale = Math.min(1.5, (group.stretch * group.size) / 5.25);
-            var alphaBase = Math.pow(power, 0.6) * group.alpha;
-            var tx = -source.ny;
-            var ty = source.nx;
-            var normalAngle = Math.atan2(source.ny, source.nx);
-
-            for (var i = 0; i < count; i++) {
-                var u = count === 1 ? 0 : (i / (count - 1) - 0.5) * 2;
-                var seed = i * 1.37 + 0.5;
-                var n1 = flameNoise(time, seed);
-                var n2 = flameNoise(time * 0.83 + 11, seed * 1.7);
-                var n3 = flameNoise(time * 1.21 + 23, seed * 2.3);
-                var edge = 1 - Math.abs(u) * 0.62;
-                var width = (14 + 16 * n2) * group.size * edge;
-                var length = Math.min((55 + 95 * n1) * lengthScale * edge, 135);
-                var angle = normalAngle + u * 0.22 + (n3 - 0.5) * 0.18 + (group.rise - 15) * 0.0015;
-                var bx = source.x + tx * u * baseHalf;
-                var by = source.y + ty * u * baseHalf;
-
-                ctx.save();
-                ctx.translate(bx, by);
-                ctx.rotate(angle + Math.PI / 2);
-                ctx.globalAlpha = alphaBase * (0.45 + 0.4 * n1) * (0.65 + 0.35 * edge);
-                ctx.drawImage(TONGUE, -width / 2, -length, width, length);
-                ctx.restore();
-            }
-        }
-
         function drawFlameLayer() {
             ctx.globalCompositeOperation = 'destination-out';
             ctx.fillStyle = 'rgba(0, 0, 0, ' + TRAIL + ')';
@@ -734,28 +829,6 @@
                 ctx.rotate(p.angle + Math.PI / 2);
                 ctx.globalAlpha = p.alpha * fade;
                 ctx.drawImage(TONGUE, -width / 2, -height, width, height);
-                ctx.restore();
-            }
-
-            if (flameSmooth && CONE_MASK) {
-                var clock = performance.now();
-                var maskW = 150;
-                var maskH = 170;
-                var widest = 0.7;
-                var inward = 12;
-                var sway = Math.sin(clock * 0.0013 + flameSmooth.x * 0.012) * 3.2;
-                var tilt = Math.sin(clock * 0.0011 + flameSmooth.y * 0.01) * 0.04;
-                var pulse = 1 + Math.sin(clock * 0.0016 + flameSmooth.x * 0.008) * 0.025;
-                var tx = -flameSmooth.ny;
-                var ty = flameSmooth.nx;
-                var cx = flameSmooth.x - flameSmooth.nx * inward + tx * sway;
-                var cy = flameSmooth.y - flameSmooth.ny * inward + ty * sway;
-
-                ctx.globalCompositeOperation = 'destination-in';
-                ctx.save();
-                ctx.translate(cx, cy);
-                ctx.rotate(Math.atan2(flameSmooth.ny, flameSmooth.nx) + Math.PI / 2 + tilt);
-                ctx.drawImage(CONE_MASK, -(maskW * pulse) / 2, -maskH * widest * pulse, maskW * pulse, maskH * pulse);
                 ctx.restore();
             }
 
@@ -819,6 +892,15 @@
 
             update(dt);
             draw();
+
+            /* Неактивный слой не должен оставлять следов */
+            if (mode === 'ring' && power < 0.01) {
+                ctx.clearRect(0, 0, width, height);
+            }
+            if (mode === 'flame' && ringPower < 0.01) {
+                ringCtx.clearRect(0, 0, width, height);
+            }
+
             rafId = requestAnimationFrame(frame);
         }
 

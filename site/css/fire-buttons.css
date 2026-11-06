@@ -1,0 +1,65 @@
+/* ==========================================================================
+   Кнопки с огнём на страницах сайта.
+   Внешний вид — из shiny-button.css, огонь — fire-button.js.
+   Размеры повторяют обычные .btn, скругление — 4px (--radius).
+   ========================================================================== */
+
+.shiny-btn--site {
+  min-width: var(--action-w);
+  min-height: var(--action-h);
+  padding: 15px 26px;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Обводка вокруг кнопки на первом экране — 1px, как рамка соседней .btn */
+.shiny-btn--outline {
+  outline: 1px solid var(--action-border);
+  outline-offset: 3px;
+}
+
+/* Кнопка в группе номинаций — по правому краю */
+.nom-group__body > .fb-anchor {
+  display: flex;
+  width: fit-content;
+  margin-left: auto;
+}
+
+/* В контактах у обычных кнопок был отступ 28px — сохраняем его */
+.contacts .fb-anchor {
+  margin-top: 28px;
+}
+
+/* Первый экран: «Смотреть номинации» — сияющая кнопка без огня.
+   На широком экране делит ряд с «Подать заявку» поровну. */
+@media (min-width: 901px) {
+  .hero__aside .hero__cta .shiny-btn {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero__cta .shiny-btn {
+    width: 100%;
+  }
+
+  .contacts .fb-anchor {
+    display: flex;
+    width: 100%;
+  }
+
+  .contacts .fb-anchor .shiny-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 360px) {
+  .shiny-btn--site {
+    min-width: 0;
+  }
+}

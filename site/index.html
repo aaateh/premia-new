@@ -13,7 +13,7 @@
   <link rel="preload" href="fonts/Involve-Regular.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="fonts/dela-gothic-one-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="css/tokens.css?v=10" />
-  <link rel="stylesheet" href="css/style.css?v=131" />
+  <link rel="stylesheet" href="css/style.css?v=139" />
   <link rel="stylesheet" href="css/typewriter.css?v=1" />
   <link rel="stylesheet" href="css/bike-loader.css?v=3" />
   <link rel="stylesheet" href="css/nominations-fire.css?v=1" />
@@ -21,6 +21,9 @@
   <link rel="stylesheet" href="css/scroll-burn.css?v=9" />
   <link rel="stylesheet" href="css/fire.css?v=3" />
   <link rel="stylesheet" href="css/partners-form.css?v=1" />
+  <link rel="stylesheet" href="css/shiny-button.css?v=2" />
+  <link rel="stylesheet" href="css/fire-button.css?v=12" />
+  <link rel="stylesheet" href="css/fire-buttons.css?v=4" />
   <link rel="stylesheet" href="css/intro.css?v=9" />
   <noscript>
     <style>
@@ -31,8 +34,13 @@
       body.is-intro .fire-scene { opacity: 1; pointer-events: auto; }
     </style>
   </noscript>
+
+  <!-- Пиксели и метрики -->
+  <script src="js/metrics.js?v=1" defer></script>
 </head>
 <body class="is-intro">
+
+  <noscript><div><img src="https://mc.yandex.ru/watch/114110981" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 
   <!-- Заставка: огонь виден только внутри логотипа и слогана -->
   <div class="intro" id="intro" data-intro>
@@ -111,6 +119,8 @@
 
     <a class="btn btn--sm header__cta" href="#pricing">Подать заявку</a>
 
+    <a class="header__apply" href="#pricing">Подать заявку</a>
+
     <button class="burger" type="button" id="burger" aria-label="Меню" aria-expanded="false" aria-controls="nav">
       <span></span><span></span><span></span>
     </button>
@@ -140,7 +150,7 @@
         <aside class="hero__aside">
           <div class="hero__cta">
             <a class="btn" href="#pricing">Подать заявку</a>
-            <a class="btn btn--ghost" href="#nominations">Смотреть номинации</a>
+            <a class="shiny-btn shiny-btn--site shiny-btn--outline" href="#nominations"><span>Смотреть номинации</span></a>
           </div>
 
           <div class="dates-line">
@@ -251,7 +261,10 @@
       </div>
 
       <div style="margin-top:32px">
-        <a class="btn" href="#pricing">Подать заявку</a>
+        <span class="fb-anchor" data-fire-button>
+          <canvas class="fb-canvas" aria-hidden="true"></canvas>
+          <a class="shiny-btn shiny-btn--site" href="#pricing"><span>Подать заявку</span></a>
+        </span>
       </div>
     </div>
 
@@ -293,7 +306,10 @@
       </div>
 
       <div style="margin-top:32px">
-        <a class="btn btn--ghost" href="#nominations">Выбрать номинацию</a>
+        <span class="fb-anchor" data-fire-button>
+          <canvas class="fb-canvas" aria-hidden="true"></canvas>
+          <a class="shiny-btn shiny-btn--site" href="#nominations"><span>Выбрать номинацию</span></a>
+        </span>
       </div>
     </div>
 
@@ -359,7 +375,10 @@
             <li>Лучший инфлюенс-маркетолог</li>
             <li>Лучший комьюнити-менеджер</li>
           </ul>
-          <a class="btn btn--sm" href="#pricing">Подать заявку</a>
+          <span class="fb-anchor" data-fire-button>
+            <canvas class="fb-canvas" aria-hidden="true"></canvas>
+            <a class="shiny-btn shiny-btn--site" href="#pricing"><span>Подать заявку</span></a>
+          </span>
         </div>
       </details>
 
@@ -387,7 +406,10 @@
             <li>Лучший лендинг года</li>
             <li>Лучшая маркетинговая воронка</li>
           </ul>
-          <a class="btn btn--sm" href="#pricing">Подать заявку</a>
+          <span class="fb-anchor" data-fire-button>
+            <canvas class="fb-canvas" aria-hidden="true"></canvas>
+            <a class="shiny-btn shiny-btn--site" href="#pricing"><span>Подать заявку</span></a>
+          </span>
         </div>
       </details>
 
@@ -422,7 +444,10 @@
             <li>Лучший маркетинг социальных и благотворительных проектов</li>
             <li>Лучший маркетинг для личного бренда</li>
           </ul>
-          <a class="btn btn--sm" href="#pricing">Подать заявку</a>
+          <span class="fb-anchor" data-fire-button>
+            <canvas class="fb-canvas" aria-hidden="true"></canvas>
+            <a class="shiny-btn shiny-btn--site" href="#pricing"><span>Подать заявку</span></a>
+          </span>
         </div>
       </details>
 
@@ -450,7 +475,10 @@
             <li>Лучший YouTube-проект года</li>
             <li>Лучший UGC-проект года</li>
           </ul>
-          <a class="btn btn--sm" href="#pricing">Подать заявку</a>
+          <span class="fb-anchor" data-fire-button>
+            <canvas class="fb-canvas" aria-hidden="true"></canvas>
+            <a class="shiny-btn shiny-btn--site" href="#pricing"><span>Подать заявку</span></a>
+          </span>
         </div>
       </details>
 
@@ -476,7 +504,10 @@
             <li>Комьюнити-менеджмент года</li>
             <li>SMM-проект в Нельзяграме</li>
           </ul>
-          <a class="btn btn--sm" href="#pricing">Подать заявку</a>
+          <span class="fb-anchor" data-fire-button>
+            <canvas class="fb-canvas" aria-hidden="true"></canvas>
+            <a class="shiny-btn shiny-btn--site" href="#pricing"><span>Подать заявку</span></a>
+          </span>
         </div>
       </details>
 
@@ -627,7 +658,10 @@
       <p class="note-strong">Важно: для участия в отборе необходимо отправить заполненный кейс. Одна оплата не заменяет подачу конкурсной работы.</p>
 
       <div style="margin-top:28px">
-        <a class="btn" href="#pricing">Подать заявку</a>
+        <span class="fb-anchor" data-fire-button>
+          <canvas class="fb-canvas" aria-hidden="true"></canvas>
+          <a class="shiny-btn shiny-btn--site" href="#pricing"><span>Подать заявку</span></a>
+        </span>
       </div>
     </div>
     <div class="burn burn--viewport" data-burn data-color="#080607" aria-hidden="true"></div>
@@ -954,7 +988,10 @@
           <h2 style="margin-bottom:20px">С каким кейсом вы готовы заявить о себе?</h2>
           <p class="muted">Расскажите о проекте, которым гордитесь. Поможем подобрать направление, разобраться с требованиями и условиями участия.</p>
           <p style="margin-top:28px">
-            <a class="btn" href="https://salebot.site/st/bw6e/conf_surov_forum_prem" target="_blank" rel="noopener">Обсудить участие</a>
+            <span class="fb-anchor" data-fire-button>
+              <canvas class="fb-canvas" aria-hidden="true"></canvas>
+              <a class="shiny-btn shiny-btn--site" href="https://salebot.site/st/bw6e/conf_surov_forum_prem" target="_blank" rel="noopener"><span>Обсудить участие</span></a>
+            </span>
           </p>
         </div>
         <div>
@@ -975,7 +1012,12 @@
             </a>
           </div>
 
-          <p style="margin-top:24px"><button class="btn btn--ghost" type="button" data-partner-open>По вопросам партнёрства</button></p>
+          <p style="margin-top:24px">
+            <span class="fb-anchor" data-fire-button>
+              <canvas class="fb-canvas" aria-hidden="true"></canvas>
+              <button class="shiny-btn shiny-btn--site" type="button" data-partner-open><span>По вопросам партнёрства</span></button>
+            </span>
+          </p>
         </div>
       </div>
     </div>
@@ -1145,6 +1187,7 @@
   (function () {
     var files = [
       'js/fire.js?v=7',
+      'js/fire-button.js?v=56',
       'js/star-border.js?v=2',
       'js/smooth-scroll.js?v=11',
       'js/app.js?v=17',

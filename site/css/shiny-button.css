@@ -32,8 +32,8 @@
   --gleam-base: #000000;
   --gleam-inset: #1a1818;
   --gleam-label: #ffffff;
-  --gleam-accent: #ff5f00;
-  --gleam-accent-soft: #ff9253;
+  --gleam-accent: var(--brand-accent);
+  --gleam-accent-soft: color-mix(in srgb, var(--brand-accent) 75%, #fff);
   --animation: shiny-angle linear infinite;
   --duration: 3s;
   --shadow-size: 2px;
