@@ -497,37 +497,35 @@
         }
 
         function spawnFlame() {
+            var group = config.flame;
+            if (Math.random() >= group.sparks / 100) {
+                return;
+            }
             var source = flameSmooth || flameTarget;
             if (!source) {
                 return;
             }
-            var group = config.flame;
             var tx = -source.ny;
             var ty = source.nx;
-            var spark = Math.random() < group.sparks / 100;
-            var clock = performance.now() * 0.001;
-            var wave = Math.sin(clock * 0.8 + source.x * 0.01) * 0.15;
-            var angle = Math.atan2(source.ny, source.nx) + (Math.random() - 0.5) * (spark ? 1.2 : 0.9) + wave;
-            var baseSpeed = spark ? 60 + Math.random() * 90 : 30 + Math.random() * 60;
-            var speed = baseSpeed * group.speed;
-            var offset = (Math.random() - 0.5) * (spark ? 16 : 26);
-            var taper = 1 - Math.min(1, Math.abs(offset) / 13) * 0.7;
+            var angle = Math.atan2(source.ny, source.nx) + (Math.random() - 0.5) * 1.2;
+            var speed = (60 + Math.random() * 90) * group.speed;
+            var offset = (Math.random() - 0.5) * 16;
             flameParticles.push({
                 x: source.x + tx * offset + source.nx * Math.random() * 3,
                 y: source.y + ty * offset + source.ny * Math.random() * 3,
-                vx: Math.cos(angle) * speed + tx * (Math.random() - 0.5) * 14,
-                vy: Math.sin(angle) * speed + ty * (Math.random() - 0.5) * 14 - 4,
+                vx: Math.cos(angle) * speed + tx * (Math.random() - 0.5) * 6,
+                vy: Math.sin(angle) * speed + ty * (Math.random() - 0.5) * 6 - 4,
                 angle: angle,
-                size: (spark ? 1.2 + Math.random() * 2 : 5 + Math.random() * 7) * group.size,
-                alpha: spark ? 0.6 + Math.random() * 0.3 : 0.28 + Math.random() * 0.18,
+                size: (1.2 + Math.random() * 2) * group.size,
+                alpha: 0.6 + Math.random() * 0.3,
                 phase: Math.random() * Math.PI * 2,
-                wobble: spark ? 0 : 4 + Math.random() * 8,
-                spark: spark,
+                wobble: 0,
+                spark: true,
                 ring: false,
-                taper: taper,
+                taper: 1,
                 rise: group.rise,
                 time: 0,
-                life: (spark ? 0.3 + Math.random() * 0.3 : 0.35 + Math.random() * 0.5) * group.life
+                life: (0.3 + Math.random() * 0.3) * group.life
             });
         }
 
@@ -659,6 +657,50 @@
             ringCtx.globalCompositeOperation = 'source-over';
         }
 
+        function flameNoise(t, seed) {
+            return 0.5
+                + 0.24 * Math.sin(t * 1.15 + seed * 1.7)
+                + 0.16 * Math.sin(t * 2.31 + seed * 3.1)
+                + 0.1 * Math.sin(t * 4.07 + seed * 5.3);
+        }
+
+        function drawProceduralFlame(now) {
+            var source = flameSmooth || flameTarget;
+            if (!source) {
+                return;
+            }
+            var group = config.flame;
+            var count = Math.max(7, Math.min(28, Math.round(8 + group.density / 45)));
+            var time = now * 0.001 * (0.15 + group.speed * 0.8);
+            var baseHalf = 34 * group.size;
+            var lengthScale = Math.min(1.5, (group.stretch * group.size) / 5.25);
+            var alphaBase = Math.pow(power, 0.6) * group.alpha;
+            var tx = -source.ny;
+            var ty = source.nx;
+            var normalAngle = Math.atan2(source.ny, source.nx);
+
+            for (var i = 0; i < count; i++) {
+                var u = count === 1 ? 0 : (i / (count - 1) - 0.5) * 2;
+                var seed = i * 1.37 + 0.5;
+                var n1 = flameNoise(time, seed);
+                var n2 = flameNoise(time * 0.83 + 11, seed * 1.7);
+                var n3 = flameNoise(time * 1.21 + 23, seed * 2.3);
+                var edge = 1 - Math.abs(u) * 0.62;
+                var width = (14 + 16 * n2) * group.size * edge;
+                var length = Math.min((55 + 95 * n1) * lengthScale * edge, 135);
+                var angle = normalAngle + u * 0.22 + (n3 - 0.5) * 0.18 + (group.rise - 15) * 0.0015;
+                var bx = source.x + tx * u * baseHalf;
+                var by = source.y + ty * u * baseHalf;
+
+                ctx.save();
+                ctx.translate(bx, by);
+                ctx.rotate(angle + Math.PI / 2);
+                ctx.globalAlpha = alphaBase * (0.45 + 0.4 * n1) * (0.65 + 0.35 * edge);
+                ctx.drawImage(TONGUE, -width / 2, -length, width, length);
+                ctx.restore();
+            }
+        }
+
         function drawFlameLayer() {
             ctx.globalCompositeOperation = 'destination-out';
             ctx.fillStyle = 'rgba(0, 0, 0, ' + TRAIL + ')';
@@ -667,6 +709,7 @@
 
             if (power > 0.01) {
                 drawFlameGlow(ctx);
+                drawProceduralFlame(performance.now());
             }
 
             var alphaBase = Math.pow(power, 0.6) * config.flame.alpha;
