@@ -141,6 +141,7 @@
           <label class="fb-field">
             <span class="fb-field__label">Жизнь частиц <output data-out="flame.life"></output></span>
             <input type="range" min="0.5" max="2" step="0.05" value="0.55" data-group="flame" data-key="life" />
+            <span class="fb-field__hint">Время жизни искр</span>
           </label>
           <label class="fb-field">
             <span class="fb-field__label">Плотность <output data-out="flame.density"></output></span>
@@ -176,10 +177,12 @@
           <label class="fb-field">
             <span class="fb-field__label">Макс. частиц <output data-out="flame.max"></output></span>
             <input type="range" min="50" max="600" step="10" value="600" data-group="flame" data-key="max" />
+            <span class="fb-field__hint">Лимит искр</span>
           </label>
           <label class="fb-field">
             <span class="fb-field__label">Растяжение <output data-out="flame.stretch"></output></span>
             <input type="range" min="1" max="3" step="0.1" value="3" data-group="flame" data-key="stretch" />
+            <span class="fb-field__hint">1 — короткие языки, 3 — длинные</span>
           </label>
           <label class="fb-field">
             <span class="fb-field__label">Яркость <output data-out="flame.alpha"></output></span>
@@ -256,7 +259,7 @@
 </main>
 
 <script src="js/fire-shader.js?v=1" defer></script>
-<script src="js/fire-button.js?v=56" defer></script>
+<script src="js/fire-button.js?v=70" defer></script>
 <script src="js/fire-panel.js?v=10" defer></script>
 <script>
 (function () {

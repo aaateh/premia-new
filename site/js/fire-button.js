@@ -10,6 +10,7 @@
 
     var MARGIN = 140;
     var TRAIL = 0.12;
+    var FLAME_TRAIL = 0.32;
     var instances = [];
     var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
     var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -77,14 +78,16 @@
         var cx = w / 2;
 
         var grad = g.createLinearGradient(0, baseY, 0, 8);
-        grad.addColorStop(0, 'rgba(255, 232, 165, .95)');
-        grad.addColorStop(0.35, 'rgba(255, 140, 30, .75)');
-        grad.addColorStop(0.75, 'rgba(255, 70, 0, .32)');
+        grad.addColorStop(0, 'rgba(255, 140, 30, 0)');
+        grad.addColorStop(0.18, 'rgba(255, 140, 30, .22)');
+        grad.addColorStop(0.46, 'rgba(255, 185, 70, .72)');
+        grad.addColorStop(0.7, 'rgba(255, 90, 0, .24)');
+        grad.addColorStop(0.9, 'rgba(255, 50, 0, .08)');
         grad.addColorStop(1, 'rgba(255, 40, 0, 0)');
 
         g.fillStyle = grad;
-        g.shadowColor = 'rgba(255, 120, 30, .8)';
-        g.shadowBlur = 12;
+        g.shadowColor = 'rgba(255, 120, 30, .6)';
+        g.shadowBlur = 4;
         g.beginPath();
         g.moveTo(cx, 8);
         g.bezierCurveTo(cx + 40, h * 0.4, cx + 50, baseY - 10, cx, baseY);
@@ -92,61 +95,10 @@
         g.closePath();
         g.fill();
 
-        var core = g.createRadialGradient(cx, baseY - 28, 0, cx, baseY - 28, 58);
-        core.addColorStop(0, 'rgba(255, 252, 230, 1)');
-        core.addColorStop(0.4, 'rgba(255, 190, 70, .85)');
-        core.addColorStop(1, 'rgba(255, 110, 20, 0)');
-        g.fillStyle = core;
-        g.fillRect(0, h - 100, w, 100);
-
         return sprite;
     }
 
     var TONGUE = makeTongue();
-
-    function makeConeMask() {
-        var w = 128;
-        var h = 256;
-        var sprite = document.createElement('canvas');
-        sprite.width = w;
-        sprite.height = h;
-        var g = sprite.getContext('2d');
-        if (!g) {
-            return null;
-        }
-
-        var cx = w / 2;
-        var widest = 0.7;
-        var maxHalf = w / 2 - 3;
-        var feather = 40;
-        var image = g.createImageData(w, h);
-        var data = image.data;
-
-        for (var y = 0; y < h; y++) {
-            var half;
-            if (y < widest * h) {
-                var t = y / (widest * h);
-                half = maxHalf * Math.pow(t, 0.85);
-            } else {
-                var b = (y - widest * h) / ((1 - widest) * h);
-                half = maxHalf * Math.pow(1 - b, 0.9);
-            }
-            for (var x = 0; x < w; x++) {
-                var d = half - Math.abs(x - cx);
-                var a = Math.min(1, Math.max(0, (d + feather / 2) / feather));
-                var i = (y * w + x) * 4;
-                data[i] = 255;
-                data[i + 1] = 255;
-                data[i + 2] = 255;
-                data[i + 3] = Math.round(a * 255);
-            }
-        }
-
-        g.putImageData(image, 0, 0);
-        return sprite;
-    }
-
-    var CONE_MASK = makeConeMask();
 
     function setup(root) {
         var canvas = root.querySelector('.fb-canvas');
@@ -510,8 +462,8 @@
                     vx: Math.cos(sparkAngle) * sparkSpeed,
                     vy: Math.sin(sparkAngle) * sparkSpeed,
                     angle: sparkAngle,
-                    size: (1.2 + Math.random() * 2) * group.size,
-                    alpha: 0.6 + Math.random() * 0.3,
+                    size: (0.5 + Math.random() * 1) * group.size,
+                    alpha: 0.45 + Math.random() * 0.35,
                     phase: Math.random() * Math.PI * 2,
                     wobble: 0,
                     spark: true,
@@ -519,7 +471,7 @@
                     taper: 1,
                     rise: group.rise,
                     time: 0,
-                    life: (0.3 + Math.random() * 0.3) * group.life
+                    life: (0.22 + Math.random() * 0.26) * group.life
                 });
                 return;
             }
@@ -548,7 +500,7 @@
 
         function spawnFlame() {
             var group = config.flame;
-            if (Math.random() >= (group.sparks / 100) * 0.45) {
+            if (Math.random() >= (group.sparks / 100) * 0.12) {
                 return;
             }
             var spot = flameSmooth || flameTarget;
@@ -560,17 +512,17 @@
             var tx = -spot.ny;
             var ty = spot.nx;
             var along = (Math.random() - 0.5) * strip;
+            var out = (18 + Math.random() * 52) * Math.max(0.45, group.stretch / 3);
             var angle = Math.atan2(spot.ny, spot.nx) + (Math.random() - 0.5) * 1.2;
-            var speed = (60 + Math.random() * 90) * group.speed;
-            var offset = (Math.random() - 0.5) * 10;
+            var speed = (40 + Math.random() * 70) * group.speed;
             flameParticles.push({
-                x: spot.x + tx * (along + offset) + spot.nx * Math.random() * 3,
-                y: spot.y + ty * (along + offset) + spot.ny * Math.random() * 3,
+                x: spot.x + tx * along + spot.nx * out,
+                y: spot.y + ty * along + spot.ny * out,
                 vx: Math.cos(angle) * speed + tx * (Math.random() - 0.5) * 6,
                 vy: Math.sin(angle) * speed + ty * (Math.random() - 0.5) * 6 - 4,
                 angle: angle,
-                size: (1.2 + Math.random() * 2) * group.size,
-                alpha: 0.6 + Math.random() * 0.3,
+                size: (0.5 + Math.random() * 1) * group.size,
+                alpha: 0.45 + Math.random() * 0.35,
                 phase: Math.random() * Math.PI * 2,
                 wobble: 0,
                 spark: true,
@@ -578,7 +530,7 @@
                 taper: 1,
                 rise: group.rise,
                 time: 0,
-                life: (0.3 + Math.random() * 0.3) * group.life
+                life: (0.22 + Math.random() * 0.26) * group.life
             });
         }
 
@@ -683,24 +635,24 @@
 
             var outer = target.createLinearGradient(a.x, a.y, b.x, b.y);
             outer.addColorStop(0, 'rgba(255, 100, 20, 0)');
-            outer.addColorStop(0.3, 'rgba(255, 100, 20, ' + (0.14 * fade) + ')');
-            outer.addColorStop(0.7, 'rgba(255, 110, 25, ' + (0.14 * fade) + ')');
+            outer.addColorStop(0.3, 'rgba(255, 100, 20, ' + (0.075 * fade) + ')');
+            outer.addColorStop(0.7, 'rgba(255, 110, 25, ' + (0.075 * fade) + ')');
             outer.addColorStop(1, 'rgba(255, 100, 20, 0)');
-            target.lineWidth = 14;
+            target.lineWidth = 9;
             target.strokeStyle = outer;
-            target.shadowColor = 'rgba(255, 80, 0, ' + (0.4 * fade) + ')';
-            target.shadowBlur = 18;
+            target.shadowColor = 'rgba(255, 80, 0, ' + (0.26 * fade) + ')';
+            target.shadowBlur = 15;
             target.stroke();
 
             var inner = target.createLinearGradient(a.x, a.y, b.x, b.y);
             inner.addColorStop(0, 'rgba(255, 190, 90, 0)');
-            inner.addColorStop(0.35, 'rgba(255, 190, 90, ' + (0.26 * fade) + ')');
-            inner.addColorStop(0.65, 'rgba(255, 190, 90, ' + (0.26 * fade) + ')');
+            inner.addColorStop(0.35, 'rgba(255, 190, 90, ' + (0.13 * fade) + ')');
+            inner.addColorStop(0.65, 'rgba(255, 190, 90, ' + (0.13 * fade) + ')');
             inner.addColorStop(1, 'rgba(255, 190, 90, 0)');
-            target.lineWidth = 3;
+            target.lineWidth = 2;
             target.strokeStyle = inner;
-            target.shadowColor = 'rgba(255, 140, 30, ' + (0.35 * fade) + ')';
-            target.shadowBlur = 8;
+            target.shadowColor = 'rgba(255, 140, 30, ' + (0.22 * fade) + ')';
+            target.shadowBlur = 6;
             target.stroke();
             target.restore();
         }
@@ -722,10 +674,10 @@
             var sizeScale = group.size / 1.75;
             var half = Math.min(total * 0.22, (50 * sizeScale) / 2) / total;
             var t0 = nearestParam(flameSmooth.x, flameSmooth.y);
-            var count = Math.max(4, Math.min(14, Math.round(4 + group.density / 80)));
+            var count = Math.max(5, Math.min(11, Math.round(5 + group.density / 90)));
             var time = now * 0.001 * (0.2 + group.speed * 1.4);
-            var lengthScale = Math.min(1.6, (group.stretch * group.size) / 5.25);
-            var alphaBase = Math.pow(power, 0.6) * group.alpha * 0.16;
+            var lengthScale = Math.pow(group.stretch / 3, 1.25) * (0.75 + 0.25 * sizeScale);
+            var alphaBase = Math.pow(power, 0.6) * group.alpha * 0.085;
             var lift = (group.rise / 30) * 0.9;
 
             for (var i = 0; i < count; i++) {
@@ -740,19 +692,27 @@
 
                 /* Верх длиннее низа: низ идёт по кромке, а не прямой линией */
                 var vertical = (1 - p.ny) * 0.5;
-                var length = (14 + 44 * n1) * lengthScale * (0.7 + 0.35 * vertical) * (0.55 + 0.45 * env);
-                var width = (5 + 9 * n2) * sizeScale * (0.85 + 0.3 * vertical) * (0.7 + 0.3 * env);
+                var length = (22 + 88 * n1) * lengthScale * (0.8 + 0.26 * vertical) * (0.55 + 0.45 * env) + 12;
+                var tongueWidth = (7 + 13 * n2) * sizeScale * (0.8 + 0.3 * vertical) * (0.75 + 0.25 * env);
+                /* Основание чуть уходит под кромку, чтобы языки росли из неё */
+                var base = -3 - (flameNoise(time * 0.7 + 3, seed * 2.1) - 0.5) * 6;
 
                 /* Нормаль контура плюс подъём: бока загибаются вверх, низ остаётся у края */
                 var dirX = p.nx;
                 var dirY = p.ny - lift;
-                var angle = Math.atan2(dirY, dirX) + (n3 - 0.5) * 0.3;
+                var angle = Math.atan2(dirY, dirX) + (n3 - 0.5) * 0.6 + (flameNoise(time * 0.4, seed * 0.9) - 0.5) * 0.4;
 
                 ctx.save();
-                ctx.translate(p.x, p.y);
+                ctx.translate(p.x + p.nx * base, p.y + p.ny * base);
                 ctx.rotate(angle + Math.PI / 2);
+
+                /* Мягкое тело пламени: заполняет промежутки, даёт объём */
+                ctx.globalAlpha = alphaBase * 0.3 * (0.5 + 0.5 * n1) * (0.3 + 0.7 * env);
+                ctx.drawImage(TONGUE, -tongueWidth * 1.15, -length * 1.05, tongueWidth * 2.3, length * 1.12);
+
+                /* Яркий язык */
                 ctx.globalAlpha = alphaBase * (0.5 + 0.5 * n1) * (0.72 + 0.28 * vertical) * (0.3 + 0.7 * env);
-                ctx.drawImage(TONGUE, -width / 2, -length, width, length);
+                ctx.drawImage(TONGUE, -tongueWidth / 2, -length, tongueWidth, length);
                 ctx.restore();
             }
         }
@@ -798,7 +758,7 @@
 
         function drawFlameLayer() {
             ctx.globalCompositeOperation = 'destination-out';
-            ctx.fillStyle = 'rgba(0, 0, 0, ' + TRAIL + ')';
+            ctx.fillStyle = 'rgba(0, 0, 0, ' + FLAME_TRAIL + ')';
             ctx.fillRect(0, 0, width, height);
             ctx.globalCompositeOperation = 'lighter';
 
@@ -816,19 +776,19 @@
                 var fade = Math.pow(1 - k, 1.4) * inK * alphaBase;
 
                 if (p.spark) {
-                    var sparkSize = p.size * 3;
+                    var sparkSize = p.size * 2.2;
                     ctx.globalAlpha = p.alpha * fade;
                     ctx.drawImage(SPARK, p.x - sparkSize / 2, p.y - sparkSize / 2, sparkSize, sparkSize);
                     continue;
                 }
 
-                var width = p.size * 2.6 * (1 - k * 0.35) * (p.taper || 1);
-                var height = Math.min(width * config.flame.stretch * (0.65 + k * 0.7), 130);
+                var pWidth = p.size * 2.6 * (1 - k * 0.35) * (p.taper || 1);
+                var pHeight = Math.min(pWidth * config.flame.stretch * (0.65 + k * 0.7), 130);
                 ctx.save();
                 ctx.translate(p.x, p.y);
                 ctx.rotate(p.angle + Math.PI / 2);
                 ctx.globalAlpha = p.alpha * fade;
-                ctx.drawImage(TONGUE, -width / 2, -height, width, height);
+                ctx.drawImage(TONGUE, -pWidth / 2, -pHeight, pWidth, pHeight);
                 ctx.restore();
             }
 
