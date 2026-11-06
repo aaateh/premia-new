@@ -29,12 +29,6 @@
   z-index: 1;
 }
 
-@media (hover: none), (pointer: coarse) {
-  .fb-canvas {
-    display: none;
-  }
-}
-
 /* ---------- панель настройки ---------- */
 
 .fb-panel {
@@ -260,4 +254,20 @@
 
 .shiny-btn--site {
   border-radius: var(--radius);
+}
+
+/* Пауза анимации кнопки вне экрана и в неактивной вкладке */
+
+.shiny-btn.is-offscreen,
+.shiny-btn.is-offscreen::before,
+.shiny-btn.is-offscreen::after,
+.shiny-btn.is-offscreen span::before {
+  animation-play-state: paused !important;
+}
+
+html.is-page-hidden .shiny-btn,
+html.is-page-hidden .shiny-btn::before,
+html.is-page-hidden .shiny-btn::after,
+html.is-page-hidden .shiny-btn span::before {
+  animation-play-state: paused !important;
 }

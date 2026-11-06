@@ -157,7 +157,8 @@
   animation-composition: add;
 }
 
-.shiny-btn:is(:hover, :focus-visible) {
+.shiny-btn:is(:hover, :focus-visible),
+.shiny-btn.is-lit {
   --shiny-percent: 20%;
   --shiny-offset: 95deg;
   --shiny-shine: var(--gleam-accent-soft);
@@ -165,11 +166,15 @@
 
 .shiny-btn:is(:hover, :focus-visible),
 .shiny-btn:is(:hover, :focus-visible)::before,
-.shiny-btn:is(:hover, :focus-visible)::after {
+.shiny-btn:is(:hover, :focus-visible)::after,
+.shiny-btn.is-lit,
+.shiny-btn.is-lit::before,
+.shiny-btn.is-lit::after {
   animation-play-state: running;
 }
 
-.shiny-btn:is(:hover, :focus-visible) span::before {
+.shiny-btn:is(:hover, :focus-visible) span::before,
+.shiny-btn.is-lit span::before {
   opacity: 1;
 }
 
