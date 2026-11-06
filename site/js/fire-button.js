@@ -115,33 +115,34 @@
             return null;
         }
 
-        /* Ромб: верхний кончик, широкое место на 70% высоты и нижний кончик,
-           который прячется под кнопкой */
-        var vg = g.createLinearGradient(0, h, 0, 0);
-        vg.addColorStop(0, 'rgba(255, 255, 255, 1)');
-        vg.addColorStop(0.3, 'rgba(255, 255, 255, 1)');
-        vg.addColorStop(0.85, 'rgba(255, 255, 255, 0.85)');
-        vg.addColorStop(1, 'rgba(255, 255, 255, 0.25)');
-        g.fillStyle = vg;
-        g.beginPath();
-        g.moveTo(w / 2, 0);
-        g.quadraticCurveTo(w, h * 0.32, w, h * 0.7);
-        g.quadraticCurveTo(w, h * 0.9, w / 2, h);
-        g.quadraticCurveTo(0, h * 0.9, 0, h * 0.7);
-        g.quadraticCurveTo(0, h * 0.32, w / 2, 0);
-        g.closePath();
-        g.fill();
+        var cx = w / 2;
+        var widest = 0.7;
+        var maxHalf = w / 2 - 3;
+        var feather = 40;
+        var image = g.createImageData(w, h);
+        var data = image.data;
 
-        g.globalCompositeOperation = 'destination-in';
-        var hg = g.createLinearGradient(0, 0, w, 0);
-        hg.addColorStop(0, 'rgba(255, 255, 255, 0)');
-        hg.addColorStop(0.2, 'rgba(255, 255, 255, 1)');
-        hg.addColorStop(0.8, 'rgba(255, 255, 255, 1)');
-        hg.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        g.fillStyle = hg;
-        g.fillRect(0, 0, w, h);
-        g.globalCompositeOperation = 'source-over';
+        for (var y = 0; y < h; y++) {
+            var half;
+            if (y < widest * h) {
+                var t = y / (widest * h);
+                half = maxHalf * Math.pow(t, 0.85);
+            } else {
+                var b = (y - widest * h) / ((1 - widest) * h);
+                half = maxHalf * Math.pow(1 - b, 0.9);
+            }
+            for (var x = 0; x < w; x++) {
+                var d = half - Math.abs(x - cx);
+                var a = Math.min(1, Math.max(0, (d + feather / 2) / feather));
+                var i = (y * w + x) * 4;
+                data[i] = 255;
+                data[i + 1] = 255;
+                data[i + 2] = 255;
+                data[i + 3] = Math.round(a * 255);
+            }
+        }
 
+        g.putImageData(image, 0, 0);
         return sprite;
     }
 
