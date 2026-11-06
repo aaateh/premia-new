@@ -159,13 +159,26 @@
             return;
         }
 
+        var ringCanvas = document.createElement('canvas');
+        ringCanvas.className = 'fb-canvas fb-canvas--ring';
+        ringCanvas.setAttribute('aria-hidden', 'true');
+        canvas.parentNode.insertBefore(ringCanvas, canvas.nextSibling);
+        var ringCtx = ringCanvas.getContext('2d');
+        if (!ringCtx) {
+            ringCanvas.remove();
+            return;
+        }
+        ringCanvas.width = 1;
+        ringCanvas.height = 1;
+
         var config = {
             flame: Object.assign({}, DEFAULTS.flame),
             ring: Object.assign({}, DEFAULTS.ring)
         };
 
         var self = null;
-        var particles = [];
+        var flameParticles = [];
+        var ringParticles = [];
         var mode = 'flame';
         var flameTarget = null;
         var flameSmooth = null;
@@ -211,7 +224,12 @@
                 canvas.width = w;
                 canvas.height = h;
             }
+            if (ringCanvas.width !== w || ringCanvas.height !== h) {
+                ringCanvas.width = w;
+                ringCanvas.height = h;
+            }
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ringCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
             shape.w = Math.max(1, width - MARGIN * 2);
             shape.h = Math.max(1, height - MARGIN * 2);
@@ -402,13 +420,13 @@
             }
 
             if (point.distance <= 0) {
-                target = 1;
+                target = 0;
             } else {
                 var proximity = Math.max(0, 1 - point.distance / config.flame.threshold);
                 target = Math.pow(proximity, config.flame.fade);
             }
 
-            if (target > 0) {
+            if (target > 0 || mode === 'ring') {
                 start();
             }
         }
@@ -435,7 +453,7 @@
             if (spark) {
                 var sparkAngle = Math.atan2(point.ny, point.nx) + (Math.random() - 0.5) * 1.2;
                 var sparkSpeed = (60 + Math.random() * 90) * group.speed;
-                particles.push({
+                ringParticles.push({
                     x: point.x,
                     y: point.y,
                     vx: Math.cos(sparkAngle) * sparkSpeed,
@@ -458,7 +476,7 @@
             var angle = Math.atan2(point.ny, point.nx) + (Math.random() - 0.5) * 0.45;
             var speed = (2 + Math.random() * 9) * group.speed;
             var offset = (Math.random() - 0.5) * 12;
-            particles.push({
+            ringParticles.push({
                 x: point.x - point.ny * offset + point.nx * Math.random() * 3,
                 y: point.y + point.nx * offset + point.ny * Math.random() * 3,
                 vx: Math.cos(angle) * speed,
@@ -493,7 +511,7 @@
             var speed = baseSpeed * group.speed;
             var offset = (Math.random() - 0.5) * (spark ? 16 : 26);
             var taper = 1 - Math.min(1, Math.abs(offset) / 13) * 0.7;
-            particles.push({
+            flameParticles.push({
                 x: source.x + tx * offset + source.nx * Math.random() * 3,
                 y: source.y + ty * offset + source.ny * Math.random() * 3,
                 vx: Math.cos(angle) * speed + tx * (Math.random() - 0.5) * 14,
@@ -520,13 +538,12 @@
             }
         }
 
-        function update(dt) {
-            var clock = performance.now() * 0.001;
-            for (var i = particles.length - 1; i >= 0; i--) {
-                var p = particles[i];
+        function updateList(list, dt, clock) {
+            for (var i = list.length - 1; i >= 0; i--) {
+                var p = list[i];
                 p.time += dt;
                 if (p.time >= p.life) {
-                    particles.splice(i, 1);
+                    list.splice(i, 1);
                     continue;
                 }
                 p.x += p.vx * dt;
@@ -547,7 +564,13 @@
             }
         }
 
-        function drawRingGlow() {
+        function update(dt) {
+            var clock = performance.now() * 0.001;
+            updateList(flameParticles, dt, clock);
+            updateList(ringParticles, dt, clock);
+        }
+
+        function drawRingGlow(target) {
             var pulse = 0.94 + 0.06 * Math.sin(performance.now() * 0.0014);
             var fade = Math.pow(ringPower, 0.7) * config.ring.glow * pulse;
             var x = MARGIN;
@@ -556,28 +579,28 @@
             var h = shape.h;
             var r = shape.r;
 
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(x + r, y);
-            ctx.arcTo(x + w, y, x + w, y + h, r);
-            ctx.arcTo(x + w, y + h, x, y + h, r);
-            ctx.arcTo(x, y + h, x, y, r);
-            ctx.arcTo(x, y, x + w, y, r);
-            ctx.closePath();
-            ctx.lineWidth = 18;
-            ctx.strokeStyle = 'rgba(255, 90, 10, ' + (0.20 * fade) + ')';
-            ctx.shadowColor = 'rgba(255, 80, 0, ' + (0.55 * fade) + ')';
-            ctx.shadowBlur = 22;
-            ctx.stroke();
-            ctx.lineWidth = 4;
-            ctx.strokeStyle = 'rgba(255, 170, 60, ' + (0.32 * fade) + ')';
-            ctx.shadowColor = 'rgba(255, 120, 20, ' + (0.4 * fade) + ')';
-            ctx.shadowBlur = 10;
-            ctx.stroke();
-            ctx.restore();
+            target.save();
+            target.beginPath();
+            target.moveTo(x + r, y);
+            target.arcTo(x + w, y, x + w, y + h, r);
+            target.arcTo(x + w, y + h, x, y + h, r);
+            target.arcTo(x, y + h, x, y, r);
+            target.arcTo(x, y, x + w, y, r);
+            target.closePath();
+            target.lineWidth = 18;
+            target.strokeStyle = 'rgba(255, 90, 10, ' + (0.20 * fade) + ')';
+            target.shadowColor = 'rgba(255, 80, 0, ' + (0.55 * fade) + ')';
+            target.shadowBlur = 22;
+            target.stroke();
+            target.lineWidth = 4;
+            target.strokeStyle = 'rgba(255, 170, 60, ' + (0.32 * fade) + ')';
+            target.shadowColor = 'rgba(255, 120, 20, ' + (0.4 * fade) + ')';
+            target.shadowBlur = 10;
+            target.stroke();
+            target.restore();
         }
 
-        function drawFlameGlow() {
+        function drawFlameGlow(target) {
             var source = flameSmooth || flameTarget;
             if (!source) {
                 return;
@@ -588,54 +611,75 @@
             }
             var pulse = 0.95 + 0.05 * Math.sin(performance.now() * 0.0012);
             var glow = 36 + 26 * power;
-            var g = ctx.createRadialGradient(source.x, source.y, 0, source.x, source.y, glow);
+            var g = target.createRadialGradient(source.x, source.y, 0, source.x, source.y, glow);
             g.addColorStop(0, 'rgba(255, 190, 110, ' + (0.30 * fade * pulse) + ')');
             g.addColorStop(0.45, 'rgba(255, 105, 25, ' + (0.15 * fade * pulse) + ')');
             g.addColorStop(1, 'rgba(255, 80, 0, 0)');
-            ctx.fillStyle = g;
-            ctx.fillRect(source.x - glow, source.y - glow, glow * 2, glow * 2);
+            target.fillStyle = g;
+            target.fillRect(source.x - glow, source.y - glow, glow * 2, glow * 2);
         }
 
-        function draw() {
-            /* Мягкий след: не стираем кадр полностью, а гасим предыдущий */
+        function drawRingLayer() {
+            ringCtx.globalCompositeOperation = 'destination-out';
+            ringCtx.fillStyle = 'rgba(0, 0, 0, ' + TRAIL + ')';
+            ringCtx.fillRect(0, 0, width, height);
+            ringCtx.globalCompositeOperation = 'lighter';
+
+            if (ringPower > 0.01) {
+                drawRingGlow(ringCtx);
+            }
+
+            var alphaBase = Math.pow(ringPower, 0.6) * config.ring.alpha;
+
+            for (var i = 0; i < ringParticles.length; i++) {
+                var p = ringParticles[i];
+                var k = p.time / p.life;
+                var inK = Math.min(1, k / (p.spark ? 0.06 : 0.2));
+                var fade = Math.pow(1 - k, 1.4) * inK * alphaBase;
+
+                if (p.spark) {
+                    var sparkSize = p.size * 3;
+                    ringCtx.globalAlpha = p.alpha * fade;
+                    ringCtx.drawImage(SPARK, p.x - sparkSize / 2, p.y - sparkSize / 2, sparkSize, sparkSize);
+                    continue;
+                }
+
+                var size = p.size * (1 + k * 0.4) * 2;
+                var sprite = k < 0.32 ? SPRITES.hot : (k < 0.7 ? SPRITES.warm : SPRITES.cool);
+                ringCtx.save();
+                ringCtx.translate(p.x, p.y);
+                ringCtx.scale(config.ring.stretch, 1);
+                ringCtx.globalAlpha = p.alpha * fade;
+                ringCtx.drawImage(sprite, -size / 2, -size / 2, size, size);
+                ringCtx.restore();
+            }
+
+            ringCtx.globalAlpha = 1;
+            ringCtx.globalCompositeOperation = 'source-over';
+        }
+
+        function drawFlameLayer() {
             ctx.globalCompositeOperation = 'destination-out';
             ctx.fillStyle = 'rgba(0, 0, 0, ' + TRAIL + ')';
             ctx.fillRect(0, 0, width, height);
             ctx.globalCompositeOperation = 'lighter';
 
-            if (ringPower > 0.01) {
-                drawRingGlow();
-            }
-            if (mode === 'flame') {
-                drawFlameGlow();
+            if (power > 0.01) {
+                drawFlameGlow(ctx);
             }
 
-            var baseFade = Math.pow(power, 0.6);
-            var flameAlpha = baseFade * config.flame.alpha;
-            var ringAlpha = baseFade * config.ring.alpha;
+            var alphaBase = Math.pow(power, 0.6) * config.flame.alpha;
 
-            for (var i = 0; i < particles.length; i++) {
-                var p = particles[i];
+            for (var i = 0; i < flameParticles.length; i++) {
+                var p = flameParticles[i];
                 var k = p.time / p.life;
                 var inK = Math.min(1, k / (p.spark ? 0.06 : 0.2));
-                var fade = Math.pow(1 - k, 1.4) * inK * (p.ring ? ringAlpha : flameAlpha);
+                var fade = Math.pow(1 - k, 1.4) * inK * alphaBase;
 
                 if (p.spark) {
                     var sparkSize = p.size * 3;
                     ctx.globalAlpha = p.alpha * fade;
                     ctx.drawImage(SPARK, p.x - sparkSize / 2, p.y - sparkSize / 2, sparkSize, sparkSize);
-                    continue;
-                }
-
-                if (p.ring) {
-                    var ringSize = p.size * (1 + k * 0.4) * 2;
-                    var ringSprite = k < 0.32 ? SPRITES.hot : (k < 0.7 ? SPRITES.warm : SPRITES.cool);
-                    ctx.save();
-                    ctx.translate(p.x, p.y);
-                    ctx.scale(config.ring.stretch, 1);
-                    ctx.globalAlpha = p.alpha * fade;
-                    ctx.drawImage(ringSprite, -ringSize / 2, -ringSize / 2, ringSize, ringSize);
-                    ctx.restore();
                     continue;
                 }
 
@@ -649,7 +693,7 @@
                 ctx.restore();
             }
 
-            if (mode === 'flame' && flameSmooth && CONE_MASK) {
+            if (flameSmooth && CONE_MASK) {
                 var clock = performance.now();
                 var maskW = 150;
                 var maskH = 170;
@@ -675,6 +719,11 @@
             ctx.globalCompositeOperation = 'source-over';
         }
 
+        function draw() {
+            drawRingLayer();
+            drawFlameLayer();
+        }
+
         function frame(now) {
             rafId = 0;
             var dt = lastTime ? Math.min((now - lastTime) / 1000, 0.05) : 0.016;
@@ -684,7 +733,7 @@
 
             if (touchActive) {
                 if (now < touchUntil) {
-                    target = 1;
+                    target = touchRing ? 0 : 1;
                     mode = touchRing ? 'ring' : 'flame';
                 } else {
                     touchActive = false;
@@ -694,24 +743,32 @@
                 }
             }
 
-            var ease = mode === 'ring' ? 3.5 : (target > 0 ? 8 : 2.2);
-            power += (target - power) * Math.min(1, dt * ease);
+            var flameEase = mode === 'ring' ? 8 : (target > 0 ? 8 : 2.2);
+            power += (target - power) * Math.min(1, dt * flameEase);
             ringPower += ((mode === 'ring' ? 1 : 0) - ringPower) * Math.min(1, dt * 3.5);
 
-            if (power < 0.004 && ringPower < 0.004 && particles.length === 0) {
+            if (power < 0.004 && ringPower < 0.004 && flameParticles.length === 0 && ringParticles.length === 0) {
                 running = false;
                 ctx.clearRect(0, 0, width, height);
+                ringCtx.clearRect(0, 0, width, height);
                 return;
             }
 
-            if (target > 0 && power > 0.01) {
-                var group = mode === 'ring' ? config.ring : config.flame;
-                var rate = mode === 'ring' ? group.density : group.density * Math.max(0.4, power);
+            if (mode === 'ring' && ringPower > 0.01) {
+                spawnAcc += config.ring.density * dt;
+                while (spawnAcc >= 1) {
+                    spawnAcc -= 1;
+                    if (ringParticles.length < config.ring.max) {
+                        spawnRing();
+                    }
+                }
+            } else if (mode === 'flame' && target > 0 && power > 0.01) {
+                var rate = config.flame.density * Math.max(0.4, power);
                 spawnAcc += rate * dt;
                 while (spawnAcc >= 1) {
                     spawnAcc -= 1;
-                    if (particles.length < group.max) {
-                        spawn();
+                    if (flameParticles.length < config.flame.max) {
+                        spawnFlame();
                     }
                 }
             }
@@ -775,11 +832,9 @@
         }
 
         function fadeParticles(ring) {
-            for (var i = 0; i < particles.length; i++) {
-                var p = particles[i];
-                if (p.ring === ring) {
-                    p.life = Math.min(p.life, p.time + 0.7);
-                }
+            var list = ring ? ringParticles : flameParticles;
+            for (var i = 0; i < list.length; i++) {
+                list[i].life = Math.min(list[i].life, list[i].time + 0.7);
             }
         }
 
@@ -889,7 +944,9 @@
                     touchRing: touchRing,
                     power: power,
                     ringPower: ringPower,
-                    particles: particles.length
+                    particles: flameParticles.length + ringParticles.length,
+                    flameParticles: flameParticles.length,
+                    ringParticles: ringParticles.length
                 };
             }
         };
