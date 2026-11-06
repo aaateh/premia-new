@@ -1,0 +1,240 @@
+/* ==========================================================================
+   Демо эффекта «Живой огонь» — fire-demo.html
+   Страница-витрина: окно с WebGL-огнём из демо Framer.
+   ========================================================================== */
+
+.fd-head {
+  border-bottom: 1px solid var(--rule);
+}
+
+.fd-head__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 76px;
+}
+
+.fd-back {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.2;
+  color: var(--scene-dim);
+  transition: color .2s var(--ease);
+}
+
+.fd-back:hover,
+.fd-back:focus-visible {
+  color: var(--scene-ink);
+}
+
+.fd-main {
+  padding: clamp(40px, 6vw, 84px) 0 clamp(48px, 7vw, 96px);
+}
+
+.fd-intro {
+  max-width: 860px;
+  margin-bottom: clamp(36px, 5vw, 56px);
+}
+
+.fd-intro h1 {
+  font-size: clamp(36px, 5vw, 56px);
+}
+
+.fd-lead {
+  margin-top: 18px;
+  max-width: 720px;
+}
+
+/* ---------- секции демо ---------- */
+
+.fd-block + .fd-block {
+  margin-top: clamp(56px, 7vw, 88px);
+  padding-top: clamp(40px, 5vw, 64px);
+  border-top: 1px solid var(--rule);
+}
+
+.fd-block__head {
+  max-width: 840px;
+  margin-bottom: clamp(24px, 3vw, 36px);
+}
+
+.fd-block__lead {
+  margin-top: 14px;
+  max-width: 720px;
+  font-family: var(--invitation-font);
+  font-size: var(--fs-lead);
+  line-height: 1.5;
+  color: var(--scene-dim);
+}
+
+/* ---------- окно ---------- */
+
+.fd-window {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--rule-strong);
+  border-radius: 10px;
+  background: #0d0b0c;
+}
+
+.fd-window__bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  height: 44px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--rule);
+  background: #131011;
+}
+
+.fd-dots {
+  display: flex;
+  gap: 7px;
+}
+
+.fd-dots i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #3a3436;
+}
+
+.fd-dots i:nth-child(1) { background: #ED6A5E; }
+.fd-dots i:nth-child(2) { background: #F4BF4F; }
+.fd-dots i:nth-child(3) { background: #61C554; }
+
+.fd-window__addr {
+  justify-self: center;
+  max-width: 100%;
+  padding: 4px 14px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: #1c1819;
+  color: #b9b1ac;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 1.4;
+  letter-spacing: .02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fd-window__tag {
+  justify-self: end;
+  font-family: var(--font-base);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+}
+
+.fd-window__stage {
+  position: relative;
+  aspect-ratio: 816 / 442;
+  background: #000;
+}
+
+.fd-window__poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fd-window__stage canvas {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.fd-window__stage canvas.is-fire-off {
+  display: none;
+}
+
+/* ---------- управление ---------- */
+
+.fd-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 20px;
+  margin-top: 18px;
+}
+
+.fd-note {
+  color: var(--scene-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ---------- факты ---------- */
+
+.fd-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: clamp(32px, 5vw, 56px);
+  border: 1px solid var(--rule);
+  background: var(--rule);
+}
+
+.fd-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 22px 24px;
+  background: var(--ground);
+}
+
+.fd-fact__k {
+  font-family: var(--slogan-font);
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.05;
+  color: var(--scene-ink);
+}
+
+.fd-fact__v {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--scene-muted);
+}
+
+.fd-shiny-stage {
+  display: grid;
+  place-items: center;
+  padding: clamp(56px, 9vw, 104px) 24px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 10px;
+  background: #000;
+}
+
+.fd-source {
+  margin-top: clamp(32px, 4vw, 48px);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--scene-muted);
+}
+
+.fd-source a {
+  color: var(--scene-ink);
+  border-bottom: 1px solid var(--rule-strong);
+  transition: border-color .2s var(--ease);
+}
+
+.fd-source a:hover {
+  border-color: var(--scene-ink);
+}
+
+@media (max-width: 760px) {
+  .fd-head__inner { min-height: 64px; }
+  .fd-facts { grid-template-columns: 1fr; }
+  .fd-window__bar { grid-template-columns: 1fr auto; gap: 10px; padding: 0 12px; }
+  .fd-window__addr { display: none; }
+}

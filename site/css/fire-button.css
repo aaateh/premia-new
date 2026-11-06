@@ -1,0 +1,263 @@
+/* ==========================================================================
+   Кнопка с огнём — версия 2
+   Мягкое пламя по всему периметру кнопки; появляется при приближении курсора.
+   Работает только на устройствах с мышью.
+   ========================================================================== */
+
+.fd-fire-stage {
+  padding: clamp(64px, 12vw, 150px) 24px;
+}
+
+.fb-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.fb-canvas {
+  position: absolute;
+  left: -140px;
+  top: -140px;
+  width: calc(100% + 280px);
+  height: calc(100% + 280px);
+  max-width: none;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.fb-anchor .shiny-btn {
+  position: relative;
+  z-index: 1;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .fb-canvas {
+    display: none;
+  }
+}
+
+/* ---------- панель настройки ---------- */
+
+.fb-panel {
+  margin-top: 22px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: #0d0b0c;
+}
+
+.fb-panel__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 16px;
+  padding: 16px 20px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.fb-panel__summary::-webkit-details-marker {
+  display: none;
+}
+
+.fb-panel__summary::after {
+  content: "+";
+  margin-left: auto;
+  color: var(--accent-text);
+  font-family: var(--font-ui);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.fb-panel[open] .fb-panel__summary::after {
+  content: "−";
+}
+
+.fb-panel__title {
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.3;
+  color: var(--scene-ink);
+}
+
+.fb-panel__hint {
+  margin-right: auto;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--scene-muted);
+}
+
+.fb-panel__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 20px 16px;
+}
+
+.fb-panel__tab {
+  padding: 8px 14px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--scene-dim);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background .2s var(--ease), border-color .2s var(--ease), color .2s var(--ease);
+}
+
+.fb-panel__tab:hover {
+  border-color: var(--scene-ink);
+}
+
+.fb-panel__tab[aria-selected="true"] {
+  border-color: var(--brand-accent);
+  background: color-mix(in srgb, var(--brand-accent) 14%, transparent);
+  color: var(--scene-ink);
+}
+
+.fb-panel__group-note {
+  margin: 0;
+  padding: 0 20px 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--scene-muted);
+}
+
+.fb-panel__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 28px;
+  padding: 0 20px 20px;
+}
+
+.fb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fb-field__label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--scene-dim);
+}
+
+.fb-field output {
+  color: var(--accent-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.fb-field__hint {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--scene-muted);
+  opacity: .6;
+}
+
+.fb-field input[type="range"] {
+  width: 100%;
+  accent-color: var(--brand-accent);
+  cursor: pointer;
+}
+
+.fb-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px 18px;
+}
+
+.fb-panel__status {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--scene-muted);
+}
+
+.fb-output {
+  display: block;
+  padding: 0 20px 20px;
+}
+
+.fb-output__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin-bottom: 8px;
+}
+
+.fb-output__label {
+  display: block;
+  margin-bottom: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--scene-muted);
+}
+
+.fb-output textarea {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: #080607;
+  color: var(--scene-ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.fb-output textarea:focus-visible {
+  outline: 2px solid var(--action-border);
+  outline-offset: 2px;
+}
+
+@media (max-width: 720px) {
+  .fb-panel__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .fb-panel {
+    display: none;
+  }
+}
+
+/* Пара кнопок: обычная и с сайтовым скруглением */
+
+.fb-pair {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(32px, 6vw, 80px);
+}
+
+.fb-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.fb-caption {
+  position: relative;
+  z-index: 2;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--scene-muted);
+  text-align: center;
+  opacity: .7;
+}
+
+.shiny-btn--site {
+  border-radius: var(--radius);
+}

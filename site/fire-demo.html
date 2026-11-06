@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Демо эффектов — Суровая премия</title>
+  <meta name="description" content="Живой огонь на WebGL, сияющая кнопка на чистом CSS и кнопка с огнём, который тянется к курсору и охватывает её при наведении." />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#080607" />
+  <link rel="icon" href="logo.svg" type="image/svg+xml" />
+  <link rel="preload" href="fonts/golos-text-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="fonts/golos-text-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="fonts/Involve-Regular.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="fonts/dela-gothic-one-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="css/tokens.css?v=10" />
+  <link rel="stylesheet" href="css/style.css?v=131" />
+  <link rel="stylesheet" href="css/fire-demo.css?v=2" />
+  <link rel="stylesheet" href="css/shiny-button.css?v=1" />
+  <link rel="stylesheet" href="css/fire-button.css?v=11" />
+</head>
+<body>
+
+<header class="fd-head">
+  <div class="wrap fd-head__inner">
+    <a class="logo" href="index.html" aria-label="Суровая премия — на главную">
+      <img class="logo__img" src="logo.svg" alt="Суровая премия" width="230" height="45" />
+    </a>
+    <a class="fd-back" href="index.html">← На главную</a>
+  </div>
+</header>
+
+<main class="fd-main">
+  <div class="wrap">
+
+    <div class="fd-intro">
+      <span class="eyebrow">Эффекты Framer</span>
+      <h1>Демо эффектов</h1>
+      <p class="lead fd-lead">Живой огонь из Framer, сияющая кнопка и её версия с огнём, который тянется к курсору.</p>
+    </div>
+
+    <section class="fd-block" aria-labelledby="fire-title">
+      <div class="fd-block__head">
+        <span class="eyebrow">WebGL</span>
+        <h2 id="fire-title">Живой огонь</h2>
+      </div>
+
+      <figure class="fd-window">
+        <div class="fd-window__bar">
+          <span class="fd-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="fd-window__addr">theme-variant.framer.ai</span>
+          <span class="fd-window__tag">WebGL</span>
+        </div>
+        <div class="fd-window__stage">
+          <img class="fd-window__poster" src="img/fire-shader-poster.jpg" alt="" width="1632" height="884" aria-hidden="true" />
+          <canvas data-fire-shader role="img" aria-label="Анимация огня: оранжевое пламя с красными языками на чёрном фоне"></canvas>
+        </div>
+      </figure>
+
+      <div class="fd-bar">
+        <button class="btn btn--sm" type="button" data-fire-toggle>Пауза</button>
+        <span class="fd-note">Цвета и параметры — как в оригинале: оранжевый низ, красные языки, чёрный верх.</span>
+        <span class="sr-only" role="status" data-fire-status></span>
+      </div>
+
+      <div class="fd-facts">
+        <div class="fd-fact">
+          <span class="fd-fact__k">3,4 МБ</span>
+          <span class="fd-fact__v">весит фоновое видео огня для десктопа</span>
+        </div>
+        <div class="fd-fact">
+          <span class="fd-fact__k">≈ 5 КБ</span>
+          <span class="fd-fact__v">весит этот шейдер в сжатом виде</span>
+        </div>
+        <div class="fd-fact">
+          <span class="fd-fact__k">Любой размер</span>
+          <span class="fd-fact__v">композиция не плывёт при изменении окна</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="fd-block" aria-labelledby="shiny-title">
+      <div class="fd-block__head">
+        <span class="eyebrow">CSS</span>
+        <h2 id="shiny-title">Сияющая кнопка</h2>
+        <p class="fd-block__lead">Вращающаяся градиентная рамка, зерно и мягкое свечение снизу. Без картинок, canvas и видео.</p>
+      </div>
+
+      <div class="fd-shiny-stage">
+        <button class="shiny-btn" type="button"><span>Подать заявку</span></button>
+      </div>
+
+      <p class="fd-note">Наведите курсор или нажмите Tab — рамка станет шире, ярче и ускорится.</p>
+    </section>
+
+    <section class="fd-block" aria-labelledby="fire-button-title">
+      <div class="fd-block__head">
+        <span class="eyebrow">CSS + Canvas</span>
+        <h2 id="fire-button-title">Кнопка с огнём</h2>
+        <p class="fd-block__lead">Подведите курсор ближе 500 px — у ближайшего края появляется пламя и тянется к курсору. На самой кнопке огонь охватывает весь периметр.</p>
+      </div>
+
+      <div class="fd-shiny-stage fd-fire-stage">
+        <div class="fb-pair">
+          <div class="fb-item">
+            <div class="fb-anchor" data-fire-button>
+              <canvas class="fb-canvas" aria-hidden="true"></canvas>
+              <button class="shiny-btn" type="button"><span>Подать заявку</span></button>
+            </div>
+            <span class="fb-caption">Скругление 32 px</span>
+          </div>
+          <div class="fb-item">
+            <div class="fb-anchor" data-fire-button>
+              <canvas class="fb-canvas" aria-hidden="true"></canvas>
+              <button class="shiny-btn shiny-btn--site" type="button"><span>Подать заявку</span></button>
+            </div>
+            <span class="fb-caption">Скругление 4 px — как на сайте</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="fd-note">Только на компьютере: на тач-устройствах огня нет.</p>
+
+      <details class="fb-panel" data-fb-panel open>
+        <summary class="fb-panel__summary">
+          <span class="fb-panel__title">Настройка огня</span>
+          <span class="fb-panel__hint">Меняйте ползунки — огонь меняется сразу</span>
+        </summary>
+
+        <div class="fb-panel__tabs" role="tablist" aria-label="Группа настроек">
+          <button class="fb-panel__tab" type="button" role="tab" aria-selected="true" data-fb-tab="flame">Вокруг кнопки</button>
+          <button class="fb-panel__tab" type="button" role="tab" aria-selected="false" data-fb-tab="ring">На кнопке</button>
+        </div>
+
+        <div class="fb-panel__group" data-fb-group="flame">
+          <p class="fb-panel__group-note">Локальный огонь у ближайшего края: появляется в радиусе, заданном ползунком «Порог», и тянется к курсору.</p>
+          <div class="fb-panel__grid">
+          <label class="fb-field">
+            <span class="fb-field__label">Скорость <output data-out="flame.speed"></output></span>
+            <input type="range" min="0.2" max="1.5" step="0.05" value="0.2" data-group="flame" data-key="speed" />
+          </label>
+          <label class="fb-field">
+            <span class="fb-field__label">Жизнь частиц <output data-out="flame.life"></output></span>
+            <input type="range" min="0.5" max="2" step="0.05" value="0.55" data-group="flame" data-key="life" />
+          </label>
+          <label class="fb-field">
+            <span class="fb-field__label">Плотность <output data-out="flame.density"></output></span>
+            <input type="range" min="20" max="600" step="10" value="600" data-group="flame" data-key="density" />
+          </label>
+          <label class="fb-field">
+            <span class="fb-field__label">Размер <output data-out="flame.size"></output></span>
+            <input type="range" min="0.5" max="2" step="0.05" value="1.75" data-group="flame" data-key="size" />
+          </label>
+          <label class="fb-field">
+            <span class="fb-field__label">Искры, % <output data-out="flame.sparks"></output></span>
+            <input type="range" min="0" max="40" step="1" value="40" data-group="flame" data-key="sparks" />
+          </label>
+          <label class="fb-field">
+            <span class="fb-field__label">Свечение <output data-out="flame.glow"></output></span>
+            <input type="range" min="0" max="1.5" step="0.05" value="1.5" data-group="flame" data-key="glow" />
+          </label>
+          <label class="fb-field">
+            <span class="fb-field__label">Подъём <output data-out="flame.rise"></output></span>
+            <input type="range" min="0" max="30" step="1" value="30" data-group="flame" data-key="rise" />
+            <span class="fb-field__hint">0 — строго от края, больше — сильнее уходит вверх</span>
+          </label>
+          <label class="fb-field">
+            <span class="fb-field__label">Порог, px <output data-out="flame.threshold"></output></span>
+            <input type="range" min="40" max="500" step="10" value="500" data-group="flame" data-key="threshold" />
+            <span class="fb-field__hint">Радиус, в котором появляется огонь</span>
+          </label>
+          <label class="fb-field">
+            <span class="fb-field__label">Затухание <output data-out="flame.fade"></output></span>
+            <input type="range" min="0.6" max="3" step="0.1" value="0.6" data-group="flame" data-key="fade" />
+            <span class="fb-field__hint">Больше — гаснет ближе к кнопке, меньше — виден дальше</span>
+          </label>
+          <label class="fb-field">
+            <span class="fb-field__label">Макс. частиц <output data-out="flame.max"></output></span>
+            <input type="range" min="50" max="600" step="10" value="600" data-group="flame" data-key="max" />
+          </label>
+          <label class="fb-field">
+            <span class="fb-field__label">Растяжение <output data-out="flame.stretch"></output></span>
+            <input type="range" min="1" max="3" step="0.1" value="3" data-group="flame" data-key="stretch" />
+          </label>
+          <label class="fb-field">
+            <span class="fb-field__label">Яркость <output data-out="flame.alpha"></output></span>
+            <input type="range" min="0.5" max="1.5" step="0.05" value="1.5" data-group="flame" data-key="alpha" />
+          </label>
+          </div>
+        </div>
+
+        <div class="fb-panel__group" data-fb-group="ring" hidden>
+          <p class="fb-panel__group-note">Мягкий огонь по всему периметру, когда курсор на кнопке.</p>
+          <div class="fb-panel__grid">
+          <label class="fb-field">
+            <span class="fb-field__label">Скорость <output data-out="ring.speed"></output></span>
+            <input type="range" min="0.2" max="1.5" step="0.05" value="0.4" data-group="ring" data-key="speed" />
+          </label>
+          <label class="fb-field">
+            <span class="fb-field__label">Жизнь частиц <output data-out="ring.life"></output></span>
+            <input type="range" min="0.5" max="2" step="0.05" value="2" data-group="ring" data-key="life" />
+          </label>
+          <label class="fb-field">
+            <span class="fb-field__label">Плотность <output data-out="ring.density"></output></span>
+            <input type="range" min="20" max="700" step="10" value="700" data-group="ring" data-key="density" />
+          </label>
+          <label class="fb-field">
+            <span class="fb-field__label">Размер <output data-out="ring.size"></output></span>
+            <input type="range" min="0.5" max="2" step="0.05" value="1.1" data-group="ring" data-key="size" />
+          </label>
+          <label class="fb-field">
+            <span class="fb-field__label">Искры, % <output data-out="ring.sparks"></output></span>
+            <input type="range" min="0" max="40" step="1" value="11" data-group="ring" data-key="sparks" />
+          </label>
+          <label class="fb-field">
+            <span class="fb-field__label">Свечение <output data-out="ring.glow"></output></span>
+            <input type="range" min="0" max="1.5" step="0.05" value="1.4" data-group="ring" data-key="glow" />
+          </label>
+          <label class="fb-field">
+            <span class="fb-field__label">Подъём <output data-out="ring.rise"></output></span>
+            <input type="range" min="0" max="30" step="1" value="30" data-group="ring" data-key="rise" />
+            <span class="fb-field__hint">0 — строго от края, больше — сильнее уходит вверх</span>
+          </label>
+          <label class="fb-field">
+            <span class="fb-field__label">Макс. частиц <output data-out="ring.max"></output></span>
+            <input type="range" min="50" max="700" step="10" value="460" data-group="ring" data-key="max" />
+          </label>
+          <label class="fb-field">
+            <span class="fb-field__label">Яркость <output data-out="ring.alpha"></output></span>
+            <input type="range" min="0.5" max="1.5" step="0.05" value="1.5" data-group="ring" data-key="alpha" />
+          </label>
+          <label class="fb-field">
+            <span class="fb-field__label">Растяжение <output data-out="ring.stretch"></output></span>
+            <input type="range" min="1" max="3" step="0.05" value="1.3" data-group="ring" data-key="stretch" />
+          </label>
+          </div>
+        </div>
+
+        <div class="fb-panel__actions">
+          <button class="btn btn--sm" type="button" data-fb-reset>Сбросить</button>
+          <span class="fb-panel__status" data-fb-status role="status"></span>
+        </div>
+
+        <div class="fb-output">
+          <div class="fb-output__head">
+            <span class="fb-output__label">Параметры текстом — скопируйте и пришлите мне</span>
+            <button class="btn btn--sm" type="button" data-fb-copy>Скопировать</button>
+          </div>
+          <textarea data-fb-output readonly rows="24" spellcheck="false"></textarea>
+        </div>
+      </details>
+    </section>
+
+    <p class="fd-source">Оригиналы — <a href="https://theme-variant.framer.ai/" target="_blank" rel="noopener noreferrer">theme-variant.framer.ai</a> и <a href="https://hyperiux-vault.framer.website/shiny-button" target="_blank" rel="noopener noreferrer">hyperiux-vault.framer.website</a></p>
+
+  </div>
+</main>
+
+<script src="js/fire-shader.js?v=1" defer></script>
+<script src="js/fire-button.js?v=13" defer></script>
+<script src="js/fire-panel.js?v=3" defer></script>
+<script>
+(function () {
+  'use strict';
+
+  function setup() {
+    var canvas = document.querySelector('[data-fire-shader]');
+    var button = document.querySelector('[data-fire-toggle]');
+    var status = document.querySelector('[data-fire-status]');
+    if (!canvas || !button) {
+      return;
+    }
+
+    var api = canvas.fireShader;
+    if (!api) {
+      button.hidden = true;
+      if (status) {
+        status.textContent = 'WebGL недоступен — анимация не запущена.';
+      }
+      return;
+    }
+
+    function render() {
+      var playing = api.isPlaying();
+      button.textContent = playing ? 'Пауза' : 'Играть';
+      if (status) {
+        status.textContent = playing ? 'Анимация запущена' : 'Анимация приостановлена';
+      }
+    }
+
+    button.addEventListener('click', function () {
+      if (api.isPlaying()) {
+        api.pause();
+      } else {
+        api.play();
+      }
+      render();
+    });
+
+    canvas.addEventListener('firestate', render);
+    render();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setup);
+  } else {
+    setup();
+  }
+})();
+</script>
+
+</body>
+</html>
