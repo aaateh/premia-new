@@ -1,5 +1,16 @@
-.openchamber/
+# Системный мусор
 .DS_Store
-backups/
+.AppleDouble
+.LSOverride
+
+# Служебные папки агента
+.openchamber/
 .opencode/tmp/
+
+# Архив: старые версии, эксперименты и исходники — хранится локально
+archive/
+
+# Секреты формы
+site/mail/config.local.php
 mail/config.local.php
+.env.local

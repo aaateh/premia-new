@@ -1,0 +1,10 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "lilo": {
+      "type": "local",
+      "command": ["/Applications/Lilo.app/Contents/MacOS/lilo-mcp"],
+      "enabled": true
+    }
+  }
+}
