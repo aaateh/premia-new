@@ -78,16 +78,14 @@
         var cx = w / 2;
 
         var grad = g.createLinearGradient(0, baseY, 0, 8);
-        grad.addColorStop(0, 'rgba(255, 140, 30, 0)');
-        grad.addColorStop(0.18, 'rgba(255, 140, 30, .22)');
-        grad.addColorStop(0.46, 'rgba(255, 185, 70, .72)');
-        grad.addColorStop(0.7, 'rgba(255, 90, 0, .24)');
-        grad.addColorStop(0.9, 'rgba(255, 50, 0, .08)');
+        grad.addColorStop(0, 'rgba(255, 232, 165, .72)');
+        grad.addColorStop(0.3, 'rgba(255, 150, 40, .62)');
+        grad.addColorStop(0.66, 'rgba(255, 80, 0, .34)');
         grad.addColorStop(1, 'rgba(255, 40, 0, 0)');
 
         g.fillStyle = grad;
-        g.shadowColor = 'rgba(255, 120, 30, .6)';
-        g.shadowBlur = 4;
+        g.shadowColor = 'rgba(255, 120, 30, .75)';
+        g.shadowBlur = 8;
         g.beginPath();
         g.moveTo(cx, 8);
         g.bezierCurveTo(cx + 40, h * 0.4, cx + 50, baseY - 10, cx, baseY);
@@ -672,122 +670,65 @@
             }
 
             var sizeScale = group.size / 1.75;
-            var stripPx = Math.min(total * 0.44, 50 * sizeScale * (0.88 + 0.12 * (group.density / 600)));
+            var stripPx = Math.min(total * 0.44, 50 * sizeScale);
             var half = stripPx / 2 / total;
             var t0 = nearestParam(flameSmooth.x, flameSmooth.y);
             var anchor = perimeterAt(t0);
-            var atx = -anchor.ny;
-            var aty = anchor.nx;
             var time = now * 0.001 * (0.2 + group.speed * 1.4);
-            var lengthScale = Math.pow(group.stretch / 3, 1.25) * (0.75 + 0.25 * sizeScale) * (0.92 + 0.08 * (group.density / 600));
+            var lengthScale = Math.pow(group.stretch / 3, 1.25) * (0.75 + 0.25 * sizeScale);
             var vertical = (1 - anchor.ny) * 0.5;
-            var mainLength = (44 + 66 * flameNoise(time, 3.7)) * lengthScale * (0.45 + 0.6 * vertical);
-            var sway = (flameNoise(time * 0.55 + 4, 8.1) - 0.5) * 20 * (mainLength / 90);
+            var mainLength = (46 + 64 * flameNoise(time, 3.7)) * lengthScale * (0.6 + 0.45 * vertical);
             var lift = (group.rise / 30) * 0.9;
-            var fullness = 0.75 + 0.25 * (group.density / 600);
-            var alpha = Math.pow(power, 0.6) * Math.min(group.alpha, 1.5);
-            var steps = 22;
-            var bases = [];
-            var outs = [];
-            var bend = (flameNoise(time * 0.6, 12.7) - 0.5) * 14;
+            var sway = (flameNoise(time * 0.55 + 4, 8.1) - 0.5) * 14;
+            var alphaBase = Math.pow(power, 0.6) * group.alpha * 0.11;
+            var count = Math.max(8, Math.min(14, Math.round(8 + group.density / 120)));
 
-            for (var i = 0; i <= steps; i++) {
-                var u = (i / steps) * 2 - 1;
+            /* Мягкое тело за языками — чтобы силуэт был цельным */
+            var bodyW = stripPx * 0.95;
+            var bodyLen = mainLength * 0.86;
+            ctx.save();
+            ctx.translate(anchor.x, anchor.y);
+            ctx.rotate(Math.atan2(anchor.ny - lift, anchor.nx) + Math.PI / 2);
+            ctx.globalAlpha = alphaBase * 0.32;
+            ctx.drawImage(TONGUE, -bodyW / 2, -bodyLen, bodyW, bodyLen);
+            ctx.restore();
+
+            for (var i = 0; i < count; i++) {
+                var u = count === 1 ? 0 : (i / (count - 1)) * 2 - 1;
                 var p = perimeterAt(t0 + u * half);
-                var env = Math.pow(Math.cos(u * Math.PI / 2), 0.52);
-                var n = flameNoise(time * 0.85, u * 3.2 + 2.3);
-                var ripple = 1
-                    + 0.08 * Math.sin(u * 7 + time * 1.8)
-                    + 0.045 * Math.sin(u * 13 - time * 2.4 + 1.3);
-                var h = mainLength * env * (0.9 + 0.14 * n) * ripple
-;
+                var env = Math.pow(Math.cos(u * Math.PI / 2), 1.15);
+                var seed = i * 1.37 + 0.5;
+                var n1 = flameNoise(time, seed);
+                var n2 = flameNoise(time * 0.83 + 11, seed * 1.7);
+                var n3 = flameNoise(time * 1.21 + 23, seed * 2.3);
+                var h = mainLength * (0.28 + 0.72 * env) * (0.78 + 0.3 * n1);
                 var dx = p.nx;
                 var dy = p.ny - lift;
                 var dl = Math.sqrt(dx * dx + dy * dy) || 1;
                 dx /= dl;
                 dy /= dl;
-                bases.push({ x: p.x, y: p.y });
-                outs.push({
-                    x: p.x + dx * h - atx * u * (stripPx / 2) * 0.24 + atx * (sway + bend) * Math.pow(env, 1.4),
-                    y: p.y + dy * h - aty * u * (stripPx / 2) * 0.24 + aty * (sway + bend) * Math.pow(env, 1.4)
-                });
-            }
+                var angle = Math.atan2(dy, dx) + u * 0.16 + (n3 - 0.5) * 0.2;
+                var w = (15 + 10 * n2) * sizeScale * (0.65 + 0.35 * env);
+                var bx = p.x + (-p.ny) * sway * env;
+                var by = p.y + p.nx * sway * env;
 
-            var mid = Math.floor(steps / 2);
-            var tip = outs[mid];
-
-            /* Цельное тело пламени: широкая кромка, сужается к концу у курсора */
-            ctx.beginPath();
-            ctx.moveTo(bases[0].x, bases[0].y);
-            for (i = 1; i <= steps; i++) {
-                ctx.lineTo(bases[i].x, bases[i].y);
-            }
-            for (i = steps; i >= 0; i--) {
-                ctx.lineTo(outs[i].x, outs[i].y);
-            }
-            ctx.closePath();
-
-            var grad = ctx.createLinearGradient(anchor.x, anchor.y, tip.x, tip.y);
-            grad.addColorStop(0, 'rgba(255, 170, 60, ' + (0.26 * fullness) + ')');
-            grad.addColorStop(0.18, 'rgba(255, 198, 88, ' + (0.62 * fullness) + ')');
-            grad.addColorStop(0.45, 'rgba(255, 120, 15, ' + (0.5 * fullness) + ')');
-            grad.addColorStop(0.72, 'rgba(255, 60, 0, ' + (0.22 * fullness) + ')');
-            grad.addColorStop(1, 'rgba(255, 40, 0, 0)');
-            ctx.globalAlpha = alpha;
-            ctx.fillStyle = grad;
-            ctx.fill();
-
-            /* Мягкая фактура внутри силуэта, без лучей наружу */
-            ctx.save();
-            ctx.clip();
-            var licks = 6;
-            for (var j = 0; j < licks; j++) {
-                var lu = licks === 1 ? 0 : (j / (licks - 1)) * 1.5 - 0.75;
-                var lp = perimeterAt(t0 + lu * half);
-                var lenv = Math.pow(Math.cos(lu * Math.PI / 2), 0.52);
-                var ln = flameNoise(time * 0.9 + j * 0.8, j * 2.3 + 1.7);
-                var lh = mainLength * lenv * (0.58 + 0.28 * ln);
-                var lx = lp.x + lp.nx * lh - atx * lu * (stripPx / 2) * 0.3 + atx * sway * lenv;
-                var ly = lp.y + (lp.ny - lift) * lh + aty * sway * lenv;
-                var ldx = lx - lp.x;
-                var ldy = ly - lp.y;
-                var llen = Math.sqrt(ldx * ldx + ldy * ldy) || 1;
-                var lw = (26 + 14 * flameNoise(time * 0.7, j * 3.4)) * sizeScale;
                 ctx.save();
-                ctx.translate(lp.x, lp.y);
-                ctx.rotate(Math.atan2(ldy, ldx) + Math.PI / 2);
-                ctx.globalAlpha = alpha * 0.08 * (0.6 + 0.4 * lenv);
-                ctx.drawImage(TONGUE, -lw / 2, -llen, lw, llen);
+                ctx.translate(bx, by);
+                ctx.rotate(angle + Math.PI / 2);
+                ctx.globalAlpha = alphaBase * (0.55 + 0.45 * n1) * (0.45 + 0.55 * env);
+                ctx.drawImage(TONGUE, -w / 2, -h, w, h);
                 ctx.restore();
             }
+
+            /* Яркое ядро у основания */
+            var coreLen = mainLength * 0.5;
+            var coreW = 26 * sizeScale;
+            ctx.save();
+            ctx.translate(anchor.x, anchor.y);
+            ctx.rotate(Math.atan2(anchor.ny - lift, anchor.nx) + Math.PI / 2);
+            ctx.globalAlpha = alphaBase * 0.5;
+            ctx.drawImage(TONGUE, -coreW / 2, -coreLen, coreW, coreLen);
             ctx.restore();
-
-            /* Тёплое ядро внутри — без отдельного «языка» */
-            ctx.beginPath();
-            for (i = 0; i <= steps; i++) {
-                var bx = bases[i].x + (outs[i].x - bases[i].x) * 0.5;
-                var by = bases[i].y + (outs[i].y - bases[i].y) * 0.5;
-                if (i === 0) {
-                    ctx.moveTo(bx, by);
-                } else {
-                    ctx.lineTo(bx, by);
-                }
-            }
-            for (i = steps; i >= 0; i--) {
-                var cx = bases[i].x + (outs[i].x - bases[i].x) * 0.42;
-                var cy = bases[i].y + (outs[i].y - bases[i].y) * 0.42;
-                ctx.lineTo(cx, cy);
-            }
-            ctx.closePath();
-
-            var core = ctx.createLinearGradient(anchor.x, anchor.y, tip.x, tip.y);
-            core.addColorStop(0, 'rgba(255, 200, 100, 0)');
-            core.addColorStop(0.22, 'rgba(255, 235, 170, ' + (0.34 * fullness) + ')');
-            core.addColorStop(0.55, 'rgba(255, 170, 60, ' + (0.18 * fullness) + ')');
-            core.addColorStop(1, 'rgba(255, 120, 30, 0)');
-            ctx.globalAlpha = alpha;
-            ctx.fillStyle = core;
-            ctx.fill();
         }
 
         function drawRingLayer() {
