@@ -672,49 +672,122 @@
             }
 
             var sizeScale = group.size / 1.75;
-            var half = Math.min(total * 0.22, (50 * sizeScale) / 2) / total;
+            var stripPx = Math.min(total * 0.44, 50 * sizeScale * (0.88 + 0.12 * (group.density / 600)));
+            var half = stripPx / 2 / total;
             var t0 = nearestParam(flameSmooth.x, flameSmooth.y);
-            var count = Math.max(5, Math.min(11, Math.round(5 + group.density / 90)));
+            var anchor = perimeterAt(t0);
+            var atx = -anchor.ny;
+            var aty = anchor.nx;
             var time = now * 0.001 * (0.2 + group.speed * 1.4);
-            var lengthScale = Math.pow(group.stretch / 3, 1.25) * (0.75 + 0.25 * sizeScale);
-            var alphaBase = Math.pow(power, 0.6) * group.alpha * 0.085;
+            var lengthScale = Math.pow(group.stretch / 3, 1.25) * (0.75 + 0.25 * sizeScale) * (0.92 + 0.08 * (group.density / 600));
+            var vertical = (1 - anchor.ny) * 0.5;
+            var mainLength = (44 + 66 * flameNoise(time, 3.7)) * lengthScale * (0.45 + 0.6 * vertical);
+            var sway = (flameNoise(time * 0.55 + 4, 8.1) - 0.5) * 20 * (mainLength / 90);
             var lift = (group.rise / 30) * 0.9;
+            var fullness = 0.75 + 0.25 * (group.density / 600);
+            var alpha = Math.pow(power, 0.6) * Math.min(group.alpha, 1.5);
+            var steps = 22;
+            var bases = [];
+            var outs = [];
+            var bend = (flameNoise(time * 0.6, 12.7) - 0.5) * 14;
 
-            for (var i = 0; i < count; i++) {
-                var u = count === 1 ? 0 : i / (count - 1) - 0.5;
-                var env = Math.pow(Math.cos(u * Math.PI), 0.7);
-                var seed = i * 1.37 + 0.5;
-                var sway = (flameNoise(time * 0.55 + 7, seed * 1.3) - 0.5) * (half * 2 / count) * 0.5;
-                var p = perimeterAt(t0 + u * half * 2 + sway);
-                var n1 = flameNoise(time, seed);
-                var n2 = flameNoise(time * 0.83 + 11, seed * 1.7);
-                var n3 = flameNoise(time * 1.21 + 23, seed * 2.3);
+            for (var i = 0; i <= steps; i++) {
+                var u = (i / steps) * 2 - 1;
+                var p = perimeterAt(t0 + u * half);
+                var env = Math.pow(Math.cos(u * Math.PI / 2), 0.52);
+                var n = flameNoise(time * 0.85, u * 3.2 + 2.3);
+                var ripple = 1
+                    + 0.08 * Math.sin(u * 7 + time * 1.8)
+                    + 0.045 * Math.sin(u * 13 - time * 2.4 + 1.3);
+                var h = mainLength * env * (0.9 + 0.14 * n) * ripple
+;
+                var dx = p.nx;
+                var dy = p.ny - lift;
+                var dl = Math.sqrt(dx * dx + dy * dy) || 1;
+                dx /= dl;
+                dy /= dl;
+                bases.push({ x: p.x, y: p.y });
+                outs.push({
+                    x: p.x + dx * h - atx * u * (stripPx / 2) * 0.24 + atx * (sway + bend) * Math.pow(env, 1.4),
+                    y: p.y + dy * h - aty * u * (stripPx / 2) * 0.24 + aty * (sway + bend) * Math.pow(env, 1.4)
+                });
+            }
 
-                /* Верх длиннее низа: низ идёт по кромке, а не прямой линией */
-                var vertical = (1 - p.ny) * 0.5;
-                var length = (22 + 88 * n1) * lengthScale * (0.8 + 0.26 * vertical) * (0.55 + 0.45 * env) + 12;
-                var tongueWidth = (7 + 13 * n2) * sizeScale * (0.8 + 0.3 * vertical) * (0.75 + 0.25 * env);
-                /* Основание чуть уходит под кромку, чтобы языки росли из неё */
-                var base = -3 - (flameNoise(time * 0.7 + 3, seed * 2.1) - 0.5) * 6;
+            var mid = Math.floor(steps / 2);
+            var tip = outs[mid];
 
-                /* Нормаль контура плюс подъём: бока загибаются вверх, низ остаётся у края */
-                var dirX = p.nx;
-                var dirY = p.ny - lift;
-                var angle = Math.atan2(dirY, dirX) + (n3 - 0.5) * 0.6 + (flameNoise(time * 0.4, seed * 0.9) - 0.5) * 0.4;
+            /* Цельное тело пламени: широкая кромка, сужается к концу у курсора */
+            ctx.beginPath();
+            ctx.moveTo(bases[0].x, bases[0].y);
+            for (i = 1; i <= steps; i++) {
+                ctx.lineTo(bases[i].x, bases[i].y);
+            }
+            for (i = steps; i >= 0; i--) {
+                ctx.lineTo(outs[i].x, outs[i].y);
+            }
+            ctx.closePath();
 
+            var grad = ctx.createLinearGradient(anchor.x, anchor.y, tip.x, tip.y);
+            grad.addColorStop(0, 'rgba(255, 170, 60, ' + (0.26 * fullness) + ')');
+            grad.addColorStop(0.18, 'rgba(255, 198, 88, ' + (0.62 * fullness) + ')');
+            grad.addColorStop(0.45, 'rgba(255, 120, 15, ' + (0.5 * fullness) + ')');
+            grad.addColorStop(0.72, 'rgba(255, 60, 0, ' + (0.22 * fullness) + ')');
+            grad.addColorStop(1, 'rgba(255, 40, 0, 0)');
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            /* Мягкая фактура внутри силуэта, без лучей наружу */
+            ctx.save();
+            ctx.clip();
+            var licks = 6;
+            for (var j = 0; j < licks; j++) {
+                var lu = licks === 1 ? 0 : (j / (licks - 1)) * 1.5 - 0.75;
+                var lp = perimeterAt(t0 + lu * half);
+                var lenv = Math.pow(Math.cos(lu * Math.PI / 2), 0.52);
+                var ln = flameNoise(time * 0.9 + j * 0.8, j * 2.3 + 1.7);
+                var lh = mainLength * lenv * (0.58 + 0.28 * ln);
+                var lx = lp.x + lp.nx * lh - atx * lu * (stripPx / 2) * 0.3 + atx * sway * lenv;
+                var ly = lp.y + (lp.ny - lift) * lh + aty * sway * lenv;
+                var ldx = lx - lp.x;
+                var ldy = ly - lp.y;
+                var llen = Math.sqrt(ldx * ldx + ldy * ldy) || 1;
+                var lw = (26 + 14 * flameNoise(time * 0.7, j * 3.4)) * sizeScale;
                 ctx.save();
-                ctx.translate(p.x + p.nx * base, p.y + p.ny * base);
-                ctx.rotate(angle + Math.PI / 2);
-
-                /* Мягкое тело пламени: заполняет промежутки, даёт объём */
-                ctx.globalAlpha = alphaBase * 0.3 * (0.5 + 0.5 * n1) * (0.3 + 0.7 * env);
-                ctx.drawImage(TONGUE, -tongueWidth * 1.15, -length * 1.05, tongueWidth * 2.3, length * 1.12);
-
-                /* Яркий язык */
-                ctx.globalAlpha = alphaBase * (0.5 + 0.5 * n1) * (0.72 + 0.28 * vertical) * (0.3 + 0.7 * env);
-                ctx.drawImage(TONGUE, -tongueWidth / 2, -length, tongueWidth, length);
+                ctx.translate(lp.x, lp.y);
+                ctx.rotate(Math.atan2(ldy, ldx) + Math.PI / 2);
+                ctx.globalAlpha = alpha * 0.08 * (0.6 + 0.4 * lenv);
+                ctx.drawImage(TONGUE, -lw / 2, -llen, lw, llen);
                 ctx.restore();
             }
+            ctx.restore();
+
+            /* Тёплое ядро внутри — без отдельного «языка» */
+            ctx.beginPath();
+            for (i = 0; i <= steps; i++) {
+                var bx = bases[i].x + (outs[i].x - bases[i].x) * 0.5;
+                var by = bases[i].y + (outs[i].y - bases[i].y) * 0.5;
+                if (i === 0) {
+                    ctx.moveTo(bx, by);
+                } else {
+                    ctx.lineTo(bx, by);
+                }
+            }
+            for (i = steps; i >= 0; i--) {
+                var cx = bases[i].x + (outs[i].x - bases[i].x) * 0.42;
+                var cy = bases[i].y + (outs[i].y - bases[i].y) * 0.42;
+                ctx.lineTo(cx, cy);
+            }
+            ctx.closePath();
+
+            var core = ctx.createLinearGradient(anchor.x, anchor.y, tip.x, tip.y);
+            core.addColorStop(0, 'rgba(255, 200, 100, 0)');
+            core.addColorStop(0.22, 'rgba(255, 235, 170, ' + (0.34 * fullness) + ')');
+            core.addColorStop(0.55, 'rgba(255, 170, 60, ' + (0.18 * fullness) + ')');
+            core.addColorStop(1, 'rgba(255, 120, 30, 0)');
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = core;
+            ctx.fill();
         }
 
         function drawRingLayer() {
